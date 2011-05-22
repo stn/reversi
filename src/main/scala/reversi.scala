@@ -1,5 +1,6 @@
 package reversi {
 
+import scala.collection._
 import scala.util.Random
 
 
@@ -132,19 +133,40 @@ class RandomPlayer(val marker: Marker) extends Player {
   }
 }
 
+class GreedyPlayer(val marker: Marker) extends Player {
+  def play(board: Board, last: Move): Move = {
+    val moves = board.possibleMoves(marker)
+    if (moves.isEmpty) {
+      return Pass
+    }
+    var nextMove = List[Move]()
+    var maxN = 0
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val (b, n) = board.reverse(x, y, marker)
+        if (n > maxN) {
+          nextMove = List(m)
+          maxN = n
+        } else if (n == maxN) {
+          nextMove = m :: nextMove
+        }
+      case _ => //
+      }
+    }
+    nextMove(Random.nextInt(nextMove.length))
+  }
+}
 
 object Game {
   def main(args: Array[String]) {
     val player1 = new RandomPlayer(Dark)
-    val player2 = new RandomPlayer(Light)
-    play(player1, player2) match {
-    case Dark => println("Dark win!")
-    case Light => println("Light win!")
-    case _ => println("Draw")
-    }
+    val player2 = new GreedyPlayer(Light)
+    val scoreMap = playN(1000, player1, player2)
+    printf("D: %d, L: %d, -: %d\n", scoreMap(Marker.Dark), scoreMap(Marker.Light), scoreMap(Marker.Blank))
   }
 
-  def play(player1: Player, player2: Player): Marker = {
+  def play(player1: Player, player2: Player, verbose: Boolean): Marker = {
     var board = Board.Start
     var move: Move = StartMove
 
@@ -153,7 +175,8 @@ object Game {
     var pass2 = false
     while (!board.isFull) {
       move = player1.play(board, move)
-      printf("%d: %s\n", ply, move)
+      if (verbose)
+        printf("%d: %s\n", ply, move)
       ply += 1
       (move: @unchecked) match {
       case PutMarker(x, y, m) =>
@@ -166,12 +189,14 @@ object Game {
       case Pass =>
         pass1 = true
       }
-      println(board)
+      if (verbose)
+        println(board)
       if ((pass1 && pass2) || board.isFull) {
         return winner(board)
       }
       move = player2.play(board, move)
-      printf("%d: %s\n", ply, move)
+      if (verbose)
+        printf("%d: %s\n", ply, move)
       ply += 1
       (move: @unchecked) match {
       case PutMarker(x, y, m) =>
@@ -184,7 +209,8 @@ object Game {
       case Pass =>
         pass2 = true
       }
-      println(board)
+      if (verbose)
+        println(board)
       if (pass1 && pass2) {
         return winner(board)
       }
@@ -198,6 +224,19 @@ object Game {
     else if (w < b) Dark
     else Blank
   }
+
+  def playN(n: Int, player1: Player, player2: Player): Map[Marker, Int] = {
+    val scoreMap = mutable.Map[Marker, Int](Blank -> 0, Dark -> 0, Light -> 0)
+    for (i <- 0 until n) {
+      play(player1, player2, false) match {
+      case Blank => scoreMap(Blank) = scoreMap(Blank) + 1
+      case Dark => scoreMap(Dark) = scoreMap(Dark) + 1
+      case Light => scoreMap(Light) = scoreMap(Light) + 1
+      }
+    }
+    scoreMap
+  }
+
 }
 
 }
