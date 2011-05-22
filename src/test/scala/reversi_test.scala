@@ -18,23 +18,48 @@ class ReversiSpec extends Spec with ShouldMatchers {
     }
 
     it("Start should be a start position") {
-      val s = Board.Start
-      for { x <- 0 until 8
-            y <- 0 until 8
-      } if ((x == 3 && y == 3) || (x ==4 && y == 4)) s(x, y) should be (Marker.Light)
-        else if ((x == 3 && y == 4) || (x ==4 && y == 3)) s(x, y) should be (Marker.Dark)
-        else s(x, y) should be (Marker.Blank)
+      Board.Start.toString should be (
+          """ abcdefgh 
+            |1........1
+            |2........2
+            |3........3
+            |4...OX...4
+            |5...XO...5
+            |6........6
+            |7........7
+            |8........8
+            | abcdefgh 
+            |""".stripMargin)
     }
 
     it("reverse should reverse a board") {
       val s = Board.Start
-      s.play(3, 2, Marker.Dark) match {
-      case Some(b1) =>
-        b1(3, 2) should be (Marker.Dark)
-        b1(3, 3) should be (Marker.Dark)
-        b1(3, 4) should be (Marker.Dark)
-      case _ => //
-      }
+      val b1 = s.play(2, 3, Marker.Dark).get
+      b1.toString should be (
+            """ abcdefgh 
+              |1........1
+              |2........2
+              |3........3
+              |4..XXX...4
+              |5...XO...5
+              |6........6
+              |7........7
+              |8........8
+              | abcdefgh 
+              |""".stripMargin)
+      val b2 = b1.play(4, 2, Marker.Light).get
+      b2.toString should be (
+            """ abcdefgh 
+              |1........1
+              |2........2
+              |3....O...3
+              |4..XXO...4
+              |5...XO...5
+              |6........6
+              |7........7
+              |8........8
+              | abcdefgh 
+              |""".stripMargin)
     }
 
   }
