@@ -119,12 +119,15 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
 
 
 trait Player {
-  val marker: Marker
+  var marker: Marker = _
+  def init(m: Marker) {
+    marker = m
+  }
   def play(board: Board, last: Move): Move
 }
 
 
-class RandomPlayer(val marker: Marker) extends Player {
+class RandomPlayer extends Player {
   def play(board: Board, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
@@ -134,7 +137,7 @@ class RandomPlayer(val marker: Marker) extends Player {
   }
 }
 
-class GreedyPlayer(val marker: Marker) extends Player {
+class GreedyPlayer extends Player {
   def play(board: Board, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
@@ -159,7 +162,7 @@ class GreedyPlayer(val marker: Marker) extends Player {
   }
 }
 
-class SimpleHeuristicsPlayer(val marker: Marker) extends Player {
+class SimpleHeuristicsPlayer extends Player {
 
   val scores = List( 8,  2,  7,  4,
                      2,  1,  3,  4,
@@ -208,17 +211,31 @@ class SimpleHeuristicsPlayer(val marker: Marker) extends Player {
 
 
 object Game {
+  val players = Map("random" -> new RandomPlayer,
+                    "greedy" -> new GreedyPlayer,
+                    "simple_heuristics" -> new SimpleHeuristicsPlayer)
+
   def main(args: Array[String]) {
-    //val player1 = new GreedyPlayer(Dark)
-    val player1 = new SimpleHeuristicsPlayer(Dark)
-    val player2 = new RandomPlayer(Light)
-    val scoreMap = playN(1000, player1, player2)
-    printf("D: %d, L: %d, -: %d\n", scoreMap(Marker.Dark), scoreMap(Marker.Light), scoreMap(Marker.Blank))
+    if (args.length < 2) {
+      println("Please specify players")
+      System.exit(1)
+    }
+
+    val player1 = players(args(0))
+    val player2 = players(args(1))
+
+    val scoreMap1 = playN(100, player1, player2)
+    printf("D: %d, L: %d, -: %d\n", scoreMap1(Marker.Dark), scoreMap1(Marker.Light), scoreMap1(Marker.Blank))
+
+    val scoreMap2 = playN(100, player2, player1)
+    printf("D: %d, L: %d, -: %d\n", scoreMap2(Marker.Dark), scoreMap2(Marker.Light), scoreMap2(Marker.Blank))
   }
 
   def play(player1: Player, player2: Player, verbose: Boolean): Marker = {
     var board = Board.Start
     var move: Move = StartMove
+    player1.init(Dark)
+    player2.init(Light)
 
     var ply = 1
     var pass1 = false
