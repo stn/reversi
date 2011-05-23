@@ -119,6 +119,7 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
 
 
 trait Player {
+  val marker: Marker
   def play(board: Board, last: Move): Move
 }
 
@@ -158,10 +159,59 @@ class GreedyPlayer(val marker: Marker) extends Player {
   }
 }
 
+class SimpleHeuristicsPlayer(val marker: Marker) extends Player {
+
+  val scores = List( 8,  2,  7,  4,
+                     2,  1,  3,  4,
+                     7,  3,  6,  5,
+                     4,  4,  5,  0)
+
+  def getScore(x: Int, y: Int): Int =
+    if (x < 4) {
+      if (y < 4) {
+        scores(x + y * 4)
+      } else {
+        scores(x + (7 - y) * 4)
+      }
+    } else {
+      if (y < 4) {
+        scores((7 - x) + y * 4)
+      } else {
+        scores((7 - x) + (7 - y) * 4)
+      }
+    }
+
+  def play(board: Board, last: Move): Move = {
+    val moves = board.possibleMoves(marker)
+    if (moves.isEmpty) {
+      return Pass
+    }
+    var nextMove = List[Move]()
+    var maxS = 0
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val s = getScore(x, y)
+        if (s > maxS) {
+          nextMove = List(m)
+          maxS = s
+        } else if (s == maxS) {
+          nextMove = m :: nextMove
+        }
+      case _ => //
+      }
+    }
+    nextMove(Random.nextInt(nextMove.length))
+  }
+
+}
+
+
 object Game {
   def main(args: Array[String]) {
-    val player1 = new RandomPlayer(Dark)
-    val player2 = new GreedyPlayer(Light)
+    //val player1 = new GreedyPlayer(Dark)
+    val player1 = new SimpleHeuristicsPlayer(Dark)
+    val player2 = new RandomPlayer(Light)
     val scoreMap = playN(1000, player1, player2)
     printf("D: %d, L: %d, -: %d\n", scoreMap(Marker.Dark), scoreMap(Marker.Light), scoreMap(Marker.Blank))
   }
