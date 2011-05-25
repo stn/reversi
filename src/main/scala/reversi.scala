@@ -30,7 +30,7 @@ class Board private (private val grid: List[Marker]) {
       None
   }
 
-  def reverse(x: Int, y: Int, m: Marker): (Board, Int) = {
+  private def reverse(x: Int, y: Int, m: Marker): (Board, Int) = {
     var b = updated(x, y, m)
     var n = 0
     for (t <- List((-1, -1), (-1, 0), (-1, 1),
@@ -138,21 +138,23 @@ class RandomPlayer extends Player {
 }
 
 class GreedyPlayer extends Player {
+
   def play(board: Board, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
       return Pass
     }
     var nextMove = List[Move]()
-    var maxN = 0
+    var maxS = 0
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
-        val (b, n) = board.reverse(x, y, marker)
-        if (n > maxN) {
+        val b = board.play(x, y, marker).get // always Some(b)
+        val s = score(b)
+        if (s > maxS) {
           nextMove = List(m)
-          maxN = n
-        } else if (n == maxN) {
+          maxS = s
+        } else if (s == maxS) {
           nextMove = m :: nextMove
         }
       case _ => //
@@ -160,16 +162,45 @@ class GreedyPlayer extends Player {
     }
     nextMove(Random.nextInt(nextMove.length))
   }
+
+  def score(board: Board): Int = {
+    val (d, w) = board.numsOfMarkers
+    if (marker == Dark) d else w
+  }
+
 }
 
 class SimpleHeuristicsPlayer extends Player {
+
+  def play(board: Board, last: Move): Move = {
+    val moves = board.possibleMoves(marker)
+    if (moves.isEmpty) {
+      return Pass
+    }
+    var nextMove = List[Move]()
+    var maxS = 0
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val s = score(x, y)
+        if (s > maxS) {
+          nextMove = List(m)
+          maxS = s
+        } else if (s == maxS) {
+          nextMove = m :: nextMove
+        }
+      case _ => //
+      }
+    }
+    nextMove(Random.nextInt(nextMove.length))
+  }
 
   val scores = List( 8,  2,  7,  4,
                      2,  1,  3,  4,
                      7,  3,  6,  5,
                      4,  4,  5,  0)
 
-  def getScore(x: Int, y: Int): Int =
+  def score(x: Int, y: Int): Int =
     if (x < 4) {
       if (y < 4) {
         scores(x + y * 4)
@@ -184,28 +215,6 @@ class SimpleHeuristicsPlayer extends Player {
       }
     }
 
-  def play(board: Board, last: Move): Move = {
-    val moves = board.possibleMoves(marker)
-    if (moves.isEmpty) {
-      return Pass
-    }
-    var nextMove = List[Move]()
-    var maxS = 0
-    for (m <- moves) {
-      m match {
-      case PutMarker(x, y, marker) =>
-        val s = getScore(x, y)
-        if (s > maxS) {
-          nextMove = List(m)
-          maxS = s
-        } else if (s == maxS) {
-          nextMove = m :: nextMove
-        }
-      case _ => //
-      }
-    }
-    nextMove(Random.nextInt(nextMove.length))
-  }
 
 }
 
