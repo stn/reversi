@@ -120,8 +120,10 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
 
 trait Player {
   var marker: Marker = _
+  var oppositeMarker: Marker = _
   def init(m: Marker) {
     marker = m
+    oppositeMarker = if (m == Dark) Light else Dark
   }
   def play(board: Board, last: Move): Move
 }
@@ -215,6 +217,59 @@ class SimpleHeuristicsPlayer extends Player {
       }
     }
 
+}
+
+
+class Depth1Player extends Player {
+
+  def play(board: Board, last: Move): Move = {
+    val moves = board.possibleMoves(marker)
+    if (moves.isEmpty) {
+      return Pass
+    }
+    var nextMove = List[Move]()
+    var maxS = -1000
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val b = board.play(x, y, marker).get // always Some(b)
+        val s = playOpposite(b)
+        if (s > maxS) {
+          nextMove = List(m)
+          maxS = s
+        } else if (s == maxS) {
+          nextMove = m :: nextMove
+        }
+      case _ => //
+      }
+    }
+    nextMove(Random.nextInt(nextMove.length))
+  }
+
+  def playOpposite(board: Board): Int = {
+    val moves = board.possibleMoves(oppositeMarker)
+    if (moves.isEmpty) {
+      return score(board)
+    }
+    var minS = 1000
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val b = board.play(x, y, oppositeMarker).get // always Some(b)
+        val s = score(b)
+        if (s < minS) {
+          minS = s
+        }
+      case _ => //
+      }
+    }
+    minS
+  }
+
+  def score(board: Board): Int = {
+    val (d, w) = board.numsOfMarkers
+    if (marker == Dark) d - w else w - d
+  }
 
 }
 
@@ -222,7 +277,9 @@ class SimpleHeuristicsPlayer extends Player {
 object Game {
   val players = Map("random" -> new RandomPlayer,
                     "greedy" -> new GreedyPlayer,
-                    "simple_heuristics" -> new SimpleHeuristicsPlayer)
+                    "simple_heuristics" -> new SimpleHeuristicsPlayer,
+                    "depth1" -> new Depth1Player
+                    )
 
   def main(args: Array[String]) {
     if (args.length < 2) {
