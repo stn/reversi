@@ -145,7 +145,7 @@ class GreedyPlayer extends Player {
       return Pass
     }
     var nextMove = List[Move]()
-    var maxS = 0
+    var maxS = -1000
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
@@ -165,7 +165,7 @@ class GreedyPlayer extends Player {
 
   def score(board: Board): Int = {
     val (d, w) = board.numsOfMarkers
-    if (marker == Dark) d else w
+    if (marker == Dark) d - w else w - d
   }
 
 }
@@ -178,7 +178,7 @@ class SimpleHeuristicsPlayer extends Player {
       return Pass
     }
     var nextMove = List[Move]()
-    var maxS = 0
+    var maxS = -1000
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
