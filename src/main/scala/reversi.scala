@@ -220,7 +220,7 @@ class SimpleHeuristicsPlayer extends Player {
 }
 
 
-class Depth1Player extends Player {
+class Depth2Player extends Player {
 
   def play(board: Board, last: Move): Move = {
     val moves = board.possibleMoves(marker)
@@ -233,7 +233,7 @@ class Depth1Player extends Player {
       m match {
       case PutMarker(x, y, marker) =>
         val b = board.play(x, y, marker).get // always Some(b)
-        val s = playOpposite(b)
+        val s = playOpponent(b)
         if (s > maxS) {
           nextMove = List(m)
           maxS = s
@@ -246,7 +246,7 @@ class Depth1Player extends Player {
     nextMove(Random.nextInt(nextMove.length))
   }
 
-  def playOpposite(board: Board): Int = {
+  def playOpponent(board: Board): Int = {
     val moves = board.possibleMoves(oppositeMarker)
     if (moves.isEmpty) {
       return score(board)
@@ -278,7 +278,7 @@ object Game {
   val players = Map("random" -> new RandomPlayer,
                     "greedy" -> new GreedyPlayer,
                     "simple_heuristics" -> new SimpleHeuristicsPlayer,
-                    "depth1" -> new Depth1Player
+                    "depth2" -> new Depth2Player
                     )
 
   def main(args: Array[String]) {
