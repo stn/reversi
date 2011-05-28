@@ -120,10 +120,11 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
 
 trait Player {
   var marker: Marker = _
-  var oppositeMarker: Marker = _
+  var opponentMarker: Marker = _
+  var name: String = ""
   def init(m: Marker) {
     marker = m
-    oppositeMarker = if (m == Dark) Light else Dark
+    opponentMarker = if (m == Dark) Light else Dark
   }
   def play(board: Board, last: Move): Move
 }
@@ -228,16 +229,16 @@ class Depth2Player extends Player {
       return Pass
     }
     var nextMove = List[Move]()
-    var maxS = -1000
+    var minS = 1000
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
         val b = board.play(x, y, marker).get // always Some(b)
         val s = playOpponent(b)
-        if (s > maxS) {
+        if (s < minS) {
           nextMove = List(m)
-          maxS = s
-        } else if (s == maxS) {
+          minS = s
+        } else if (s == minS) {
           nextMove = m :: nextMove
         }
       case _ => //
@@ -247,28 +248,28 @@ class Depth2Player extends Player {
   }
 
   def playOpponent(board: Board): Int = {
-    val moves = board.possibleMoves(oppositeMarker)
+    val moves = board.possibleMoves(opponentMarker)
     if (moves.isEmpty) {
-      return score(board)
+      return opponentScore(board)
     }
-    var minS = 1000
+    var maxS = -1000
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
-        val b = board.play(x, y, oppositeMarker).get // always Some(b)
-        val s = score(b)
-        if (s < minS) {
-          minS = s
+        val b = board.play(x, y, opponentMarker).get // always Some(b)
+        val s = opponentScore(b)
+        if (s > maxS) {
+          maxS = s
         }
       case _ => //
       }
     }
-    minS
+    maxS
   }
 
-  def score(board: Board): Int = {
+  def opponentScore(board: Board): Int = {
     val (d, w) = board.numsOfMarkers
-    if (marker == Dark) d - w else w - d
+    if (opponentMarker == Dark) d - w else w - d
   }
 
 }
@@ -288,13 +289,21 @@ object Game {
     }
 
     val player1 = players(args(0))
+    player1.name = args(0)
     val player2 = players(args(1))
+    player2.name = args(1)
 
     val scoreMap1 = playN(100, player1, player2)
-    printf("D: %d, L: %d, -: %d\n", scoreMap1(Marker.Dark), scoreMap1(Marker.Light), scoreMap1(Marker.Blank))
+    printf("%s D: %d, %s L: %d, -: %d\n",
+        player1.name, scoreMap1(Marker.Dark),
+        player2.name, scoreMap1(Marker.Light),
+        scoreMap1(Marker.Blank))
 
     val scoreMap2 = playN(100, player2, player1)
-    printf("D: %d, L: %d, -: %d\n", scoreMap2(Marker.Dark), scoreMap2(Marker.Light), scoreMap2(Marker.Blank))
+    printf("%s D: %d, %s L: %d, -: %d\n",
+        player2.name, scoreMap2(Marker.Dark),
+        player1.name, scoreMap2(Marker.Light),
+        scoreMap2(Marker.Blank))
   }
 
   def play(player1: Player, player2: Player, verbose: Boolean): Marker = {
