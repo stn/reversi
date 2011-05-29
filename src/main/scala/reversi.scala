@@ -68,9 +68,9 @@ class Board private (private val grid: List[Marker]) {
     var w = 0
     for (m <- grid) {
       m match {
-      case Dark => b += 1
-      case Light => w += 1
-      case _ => //
+        case Dark => b += 1
+        case Light => w += 1
+        case _ => //
       }
     }
     (b, w)
@@ -151,16 +151,16 @@ class GreedyPlayer extends Player {
     var maxS = -1000
     for (m <- moves) {
       m match {
-      case PutMarker(x, y, marker) =>
-        val b = board.play(x, y, marker).get // always Some(b)
-        val s = score(b)
-        if (s > maxS) {
-          nextMove = List(m)
-          maxS = s
-        } else if (s == maxS) {
-          nextMove = m :: nextMove
-        }
-      case _ => //
+        case PutMarker(x, y, marker) =>
+          val b = board.play(x, y, marker).get // always Some(b)
+          val s = score(b)
+          if (s > maxS) {
+            nextMove = List(m)
+            maxS = s
+          } else if (s == maxS) {
+            nextMove = m :: nextMove
+          }
+        case _ => //
       }
     }
     nextMove(Random.nextInt(nextMove.length))
@@ -184,15 +184,15 @@ class SimpleHeuristicsPlayer extends Player {
     var maxS = -1000
     for (m <- moves) {
       m match {
-      case PutMarker(x, y, marker) =>
-        val s = score(x, y)
-        if (s > maxS) {
-          nextMove = List(m)
-          maxS = s
-        } else if (s == maxS) {
-          nextMove = m :: nextMove
-        }
-      case _ => //
+        case PutMarker(x, y, marker) =>
+          val s = score(x, y)
+          if (s > maxS) {
+            nextMove = List(m)
+            maxS = s
+          } else if (s == maxS) {
+            nextMove = m :: nextMove
+          }
+        case _ => //
       }
     }
     nextMove(Random.nextInt(nextMove.length))
@@ -232,16 +232,16 @@ class Depth2Player extends Player {
     var maxS = -1000
     for (m <- moves) {
       m match {
-      case PutMarker(x, y, marker) =>
-        val b = board.play(x, y, marker).get // always Some(b)
-        val s = playOpponent(b)
-        if (s > maxS) {
-          nextMove = List(m)
-          maxS = s
-        } else if (s == maxS) {
-          nextMove = m :: nextMove
-        }
-      case _ => //
+        case PutMarker(x, y, marker) =>
+          val b = board.play(x, y, marker).get // always Some(b)
+          val s = playOpponent(b)
+          if (s > maxS) {
+            nextMove = List(m)
+            maxS = s
+          } else if (s == maxS) {
+            nextMove = m :: nextMove
+          }
+        case _ => //
       }
     }
     nextMove(Random.nextInt(nextMove.length))
@@ -255,13 +255,13 @@ class Depth2Player extends Player {
     var minS = 1000
     for (m <- moves) {
       m match {
-      case PutMarker(x, y, marker) =>
-        val b = board.play(x, y, opponentMarker).get // always Some(b)
-        val s = score(b)
-        if (s < minS) {
-          minS = s
-        }
-      case _ => //
+        case PutMarker(x, y, marker) =>
+          val b = board.play(x, y, opponentMarker).get // always Some(b)
+          val s = score(b)
+          if (s < minS) {
+            minS = s
+          }
+        case _ => //
       }
     }
     minS
@@ -290,16 +290,16 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
     var maxS = -1000
     for (m <- moves) {
       m match {
-      case PutMarker(x, y, marker) =>
-        val b = board.play(x, y, marker).get // always Some(b)
-        val s = if (depth == 1) score(b) else playOpponent(b, depth - 1)
-        if (s > maxS) {
-          nextMove = List((m, s))
-          maxS = s
-        } else if (s == maxS) {
-          nextMove = (m, s) :: nextMove
-        }
-      case _ => //
+        case PutMarker(x, y, marker) =>
+          val b = board.play(x, y, marker).get // always Some(b)
+          val s = if (depth == 1) score(b) else playOpponent(b, depth - 1)
+          if (s > maxS) {
+            nextMove = List((m, s))
+            maxS = s
+          } else if (s == maxS) {
+            nextMove = (m, s) :: nextMove
+          }
+        case _ => //
       }
     }
     nextMove(Random.nextInt(nextMove.length))
@@ -313,13 +313,13 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
     var minS = 1000
     for (m <- moves) {
       m match {
-      case PutMarker(x, y, marker) =>
-        val b = board.play(x, y, opponentMarker).get // always Some(b)
-        val s = if (depth == 1) score(b) else play(b, depth - 1)._2
-        if (s < minS) {
-          minS = s
-        }
-      case _ => //
+        case PutMarker(x, y, marker) =>
+          val b = board.play(x, y, opponentMarker).get // always Some(b)
+          val s = if (depth == 1) score(b) else play(b, depth - 1)._2
+          if (s < minS) {
+            minS = s
+          }
+        case _ => //
       }
     }
     minS
@@ -343,32 +343,51 @@ object Game {
                     "minmax4" -> new MinmaxPlayer(4)
                     )
 
-  def main(args: Array[String]) {
+  var numOfGames = 0
+  var verbose = false
+
+  def main(originalArgs: Array[String]) {
+    var args = parseOptions(originalArgs.toList)
+
     if (args.length < 2) {
       println("Please specify players")
       System.exit(1)
     }
 
-    val numOfGames = args(0).toInt
-    val player1 = players(args(1))
-    player1.name = args(1)
-    val player2 = players(args(2))
-    player2.name = args(2)
+    val player1 = players(args(0))
+    player1.name = args(0)
+    val player2 = players(args(1))
+    player2.name = args(1)
 
-    val scoreMap1 = playN(numOfGames, player1, player2)
-    printf("%s D: %d, %s L: %d, -: %d\n",
-        player1.name, scoreMap1(Marker.Dark),
-        player2.name, scoreMap1(Marker.Light),
-        scoreMap1(Marker.Blank))
+    if (numOfGames == 0) {
+      verbose = true
+      println(play(player1, player2))
+    } else {
+      val scoreMap1 = playN(numOfGames, player1, player2)
+      printf("%s D: %d, %s L: %d, -: %d\n",
+          player1.name, scoreMap1(Marker.Dark),
+          player2.name, scoreMap1(Marker.Light),
+          scoreMap1(Marker.Blank))
 
-    val scoreMap2 = playN(numOfGames, player2, player1)
-    printf("%s D: %d, %s L: %d, -: %d\n",
-        player2.name, scoreMap2(Marker.Dark),
-        player1.name, scoreMap2(Marker.Light),
-        scoreMap2(Marker.Blank))
+      val scoreMap2 = playN(numOfGames, player2, player1)
+      printf("%s D: %d, %s L: %d, -: %d\n",
+          player2.name, scoreMap2(Marker.Dark),
+          player1.name, scoreMap2(Marker.Light),
+          scoreMap2(Marker.Blank))
+    }
   }
 
-  def play(player1: Player, player2: Player, verbose: Boolean): Marker = {
+  def parseOptions(args: List[String]): List[String] =
+    args match {
+        case "-n" :: times :: rest =>
+          numOfGames = times.toInt
+          parseOptions(rest)
+
+        case _ =>
+          args
+      }
+
+  def play(player1: Player, player2: Player): Marker = {
     var board = Board.Start
     var move: Move = StartMove
     player1.init(Dark)
@@ -383,15 +402,15 @@ object Game {
         printf("%d: %s\n", ply, move)
       ply += 1
       (move: @unchecked) match {
-      case PutMarker(x, y, m) =>
-        val b = board.play(x, y, m)
-        b match {
-        case Some(d) => board = d
-        case None => return Light
-        }
-        pass1 = false
-      case Pass =>
-        pass1 = true
+        case PutMarker(x, y, m) =>
+          val b = board.play(x, y, m)
+          b match {
+            case Some(d) => board = d
+            case None => return Light
+          }
+          pass1 = false
+        case Pass =>
+          pass1 = true
       }
       if (verbose)
         println(board)
@@ -403,15 +422,15 @@ object Game {
         printf("%d: %s\n", ply, move)
       ply += 1
       (move: @unchecked) match {
-      case PutMarker(x, y, m) =>
-        val b = board.play(x, y, m)
-        b match {
-        case Some(d) => board = d
-        case None => return Dark
-        }
-        pass2 = false
-      case Pass =>
-        pass2 = true
+        case PutMarker(x, y, m) =>
+          val b = board.play(x, y, m)
+          b match {
+            case Some(d) => board = d
+            case None => return Dark
+          }
+          pass2 = false
+        case Pass =>
+          pass2 = true
       }
       if (verbose)
         println(board)
@@ -432,10 +451,10 @@ object Game {
   def playN(n: Int, player1: Player, player2: Player): Map[Marker, Int] = {
     val scoreMap = mutable.Map[Marker, Int](Blank -> 0, Dark -> 0, Light -> 0)
     for (i <- 0 until n) {
-      play(player1, player2, false) match {
-      case Blank => scoreMap(Blank) = scoreMap(Blank) + 1
-      case Dark => scoreMap(Dark) = scoreMap(Dark) + 1
-      case Light => scoreMap(Light) = scoreMap(Light) + 1
+      play(player1, player2) match {
+        case Blank => scoreMap(Blank) = scoreMap(Blank) + 1
+        case Dark => scoreMap(Dark) = scoreMap(Dark) + 1
+        case Light => scoreMap(Light) = scoreMap(Light) + 1
       }
     }
     scoreMap
