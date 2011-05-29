@@ -339,7 +339,8 @@ object Game {
                     "simple_heuristics" -> new SimpleHeuristicsPlayer,
                     "depth2" -> new Depth2Player,
                     "minmax2" -> new MinmaxPlayer(2),
-                    "minmax3" -> new MinmaxPlayer(3)
+                    "minmax3" -> new MinmaxPlayer(3),
+                    "minmax4" -> new MinmaxPlayer(4)
                     )
 
   def main(args: Array[String]) {
@@ -348,18 +349,19 @@ object Game {
       System.exit(1)
     }
 
-    val player1 = players(args(0))
-    player1.name = args(0)
-    val player2 = players(args(1))
-    player2.name = args(1)
+    val numOfGames = args(0).toInt
+    val player1 = players(args(1))
+    player1.name = args(1)
+    val player2 = players(args(2))
+    player2.name = args(2)
 
-    val scoreMap1 = playN(100, player1, player2)
+    val scoreMap1 = playN(numOfGames, player1, player2)
     printf("%s D: %d, %s L: %d, -: %d\n",
         player1.name, scoreMap1(Marker.Dark),
         player2.name, scoreMap1(Marker.Light),
         scoreMap1(Marker.Blank))
 
-    val scoreMap2 = playN(100, player2, player1)
+    val scoreMap2 = playN(numOfGames, player2, player1)
     printf("%s D: %d, %s L: %d, -: %d\n",
         player2.name, scoreMap2(Marker.Dark),
         player1.name, scoreMap2(Marker.Light),
