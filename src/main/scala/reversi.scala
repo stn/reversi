@@ -122,11 +122,16 @@ trait Player {
   var marker: Marker = _
   var opponentMarker: Marker = _
   var name: String = ""
+
   def init(m: Marker) {
     marker = m
-    opponentMarker = if (m == Dark) Light else Dark
+    opponentMarker = flipColor(m)
   }
+  
   def play(board: Board, last: Move): Move
+
+  def flipColor(m: Marker): Marker =
+    if (m == Dark) Light else Dark
 }
 
 
@@ -282,6 +287,9 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
   }
 
   def play(board: Board, depth: Int): (Move, Int) = {
+    if (depth == 0) {
+      return (Pass, score(board))
+    }
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
       return (Pass, score(board))
@@ -292,7 +300,7 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
       m match {
         case PutMarker(x, y, marker) =>
           val b = board.play(x, y, marker).get // always Some(b)
-          val s = if (depth == 1) score(b) else playOpponent(b, depth - 1)
+          val s = playOpponent(b, depth - 1)
           if (s > maxS) {
             nextMove = List((m, s))
             maxS = s
@@ -306,6 +314,9 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
   }
 
   def playOpponent(board: Board, depth: Int): Int = {
+    if (depth == 0) {
+      return score(board)
+    }
     val moves = board.possibleMoves(opponentMarker)
     if (moves.isEmpty) {
       return score(board)
@@ -315,7 +326,7 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
       m match {
         case PutMarker(x, y, marker) =>
           val b = board.play(x, y, opponentMarker).get // always Some(b)
-          val s = if (depth == 1) score(b) else play(b, depth - 1)._2
+          val s = play(b, depth - 1)._2
           if (s < minS) {
             minS = s
           }
@@ -323,6 +334,47 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
       }
     }
     minS
+  }
+  
+  def score(board: Board): Int = {
+    val (d, w) = board.numsOfMarkers
+    if (marker == Dark) d - w else w - d
+  }
+
+}
+
+class NegamaxPlayer(val maxDepth: Int) extends Player {
+
+  def play(board: Board, last: Move): Move = {
+    val (m, s) = play(board, marker, maxDepth)
+    m
+  }
+
+  def play(board: Board, color: Marker, depth: Int): (Move, Int) = {
+    if (depth == 0) {
+      return (Pass, score(board))
+    }
+    val moves = board.possibleMoves(color)
+    if (moves.isEmpty) {
+      return (Pass, score(board))
+    }
+    var nextMove = List[(Move, Int)]()
+    var maxS = -1000
+    for (m <- moves) {
+      m match {
+        case PutMarker(x, y, _) =>
+          val b = board.play(x, y, color).get // always Some(b)
+          val s = -play(b, flipColor(color), depth - 1)._2
+          if (s > maxS) {
+            nextMove = List((m, s))
+            maxS = s
+          } else if (s == maxS) {
+            nextMove = (m, s) :: nextMove
+          }
+        case _ => //
+      }
+    }
+    nextMove(Random.nextInt(nextMove.length))
   }
   
   def score(board: Board): Int = {
@@ -340,7 +392,8 @@ object Game {
                     "depth2" -> new Depth2Player,
                     "minmax2" -> new MinmaxPlayer(2),
                     "minmax3" -> new MinmaxPlayer(3),
-                    "minmax4" -> new MinmaxPlayer(4)
+                    "minmax4" -> new MinmaxPlayer(4),
+                    "negamax2" -> new NegamaxPlayer(2)
                     )
 
   var numOfGames = 0
