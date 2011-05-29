@@ -229,16 +229,16 @@ class Depth2Player extends Player {
       return Pass
     }
     var nextMove = List[Move]()
-    var minS = 1000
+    var maxS = -1000
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
         val b = board.play(x, y, marker).get // always Some(b)
         val s = playOpponent(b)
-        if (s < minS) {
+        if (s > maxS) {
           nextMove = List(m)
-          minS = s
-        } else if (s == minS) {
+          maxS = s
+        } else if (s == maxS) {
           nextMove = m :: nextMove
         }
       case _ => //
@@ -250,26 +250,84 @@ class Depth2Player extends Player {
   def playOpponent(board: Board): Int = {
     val moves = board.possibleMoves(opponentMarker)
     if (moves.isEmpty) {
-      return opponentScore(board)
+      return score(board)
     }
-    var maxS = -1000
+    var minS = 1000
     for (m <- moves) {
       m match {
       case PutMarker(x, y, marker) =>
         val b = board.play(x, y, opponentMarker).get // always Some(b)
-        val s = opponentScore(b)
-        if (s > maxS) {
-          maxS = s
+        val s = score(b)
+        if (s < minS) {
+          minS = s
         }
       case _ => //
       }
     }
-    maxS
+    minS
   }
 
-  def opponentScore(board: Board): Int = {
+  def score(board: Board): Int = {
     val (d, w) = board.numsOfMarkers
-    if (opponentMarker == Dark) d - w else w - d
+    if (marker == Dark) d - w else w - d
+  }
+
+}
+
+class MinmaxPlayer(val maxDepth: Int) extends Player {
+
+  def play(board: Board, last: Move): Move = {
+    val (m, s) = play(board, maxDepth)
+    m
+  }
+
+  def play(board: Board, depth: Int): (Move, Int) = {
+    val moves = board.possibleMoves(marker)
+    if (moves.isEmpty) {
+      return (Pass, score(board))
+    }
+    var nextMove = List[(Move, Int)]()
+    var maxS = -1000
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val b = board.play(x, y, marker).get // always Some(b)
+        val s = if (depth == 1) score(b) else playOpponent(b, depth - 1)
+        if (s > maxS) {
+          nextMove = List((m, s))
+          maxS = s
+        } else if (s == maxS) {
+          nextMove = (m, s) :: nextMove
+        }
+      case _ => //
+      }
+    }
+    nextMove(Random.nextInt(nextMove.length))
+  }
+
+  def playOpponent(board: Board, depth: Int): Int = {
+    val moves = board.possibleMoves(opponentMarker)
+    if (moves.isEmpty) {
+      return score(board)
+    }
+    var minS = 1000
+    for (m <- moves) {
+      m match {
+      case PutMarker(x, y, marker) =>
+        val b = board.play(x, y, opponentMarker).get // always Some(b)
+        val s = if (depth == 1) score(b) else play(b, depth - 1)._2
+        if (s < minS) {
+          minS = s
+        }
+      case _ => //
+      }
+    }
+    minS
+  }
+  
+  def score(board: Board): Int = {
+    val (d, w) = board.numsOfMarkers
+    if (marker == Dark) d - w else w - d
   }
 
 }
@@ -279,7 +337,9 @@ object Game {
   val players = Map("random" -> new RandomPlayer,
                     "greedy" -> new GreedyPlayer,
                     "simple_heuristics" -> new SimpleHeuristicsPlayer,
-                    "depth2" -> new Depth2Player
+                    "depth2" -> new Depth2Player,
+                    "minmax2" -> new MinmaxPlayer(2),
+                    "minmax3" -> new MinmaxPlayer(3)
                     )
 
   def main(args: Array[String]) {
