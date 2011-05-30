@@ -23,10 +23,9 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
 }
 
 trait Board {
-  type T <: Board
   def apply(x: Int, y: Int): Marker
-  def updated(x: Int, y: Int, m: Marker): T
-  def play(move: Move): Option[T]
+  def updated(x: Int, y: Int, m: Marker): Board
+  def play(move: Move): Option[Board]
   def possibleMoves(m: Marker): Seq[Move]
   def numOfMarkers: (Int, Int)
 }
@@ -35,8 +34,6 @@ trait Board {
 package reversi {
 
 class ListBoard protected (protected val grid: List[Marker]) extends Board {
-
-  type T = ListBoard
 
   def this() = this(List.fill(64) { Blank })
 
