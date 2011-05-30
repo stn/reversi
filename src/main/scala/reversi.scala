@@ -1,4 +1,4 @@
-package reversi {
+package boardgame {
 
 import scala.collection._
 import scala.util.Random
@@ -10,7 +10,32 @@ object Marker extends Enumeration {
 }
 import Marker._
 
-class Board private (private val grid: List[Marker]) {
+class Move
+case object StartMove extends Move
+case object Pass extends Move
+case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
+  override def toString: String = {
+    val ms = if (m == Dark) "D" else "L"
+    val xs = ('a' + x).asInstanceOf[Char]
+    val ys = ('1' + y).asInstanceOf[Char]
+    ms + "-" + xs + ys
+  }
+}
+
+trait BoardBase {
+ type T
+ def apply(x: Int, y: Int): Marker
+ def updated(x: Int, y: Int, m: Marker): T
+ def isCleaer(x: Int, y: Int): Boolean = apply(x, y) == Blank
+ def play(move: Move): Option[T]
+}
+
+
+package reversi {
+
+class Board protected (protected val grid: List[Marker]) extends BoardBase {
+
+  type T = Board
 
   def this() = this(List.fill(64) { Blank })
 
@@ -21,14 +46,18 @@ class Board private (private val grid: List[Marker]) {
 
   def isClear(x: Int, y: Int): Boolean = apply(x, y) == Blank
   
-  def play(x: Int, y: Int, m: Marker): Option[Board] = {
-    if (!isClear(x, y)) return None
-    val (b, n) = reverse(x, y, m)
-    if (n > 0)
-      Some(b)
-    else
-      None
-  }
+  def play(move: Move): Option[Board] =
+    move match {
+      case StartMove => Some(Board.Start)
+      case Pass => Some(this)
+      case PutMarker(x, y, m) =>
+        if (!isClear(x, y)) return None
+        val (b, n) = reverse(x, y, m)
+        if (n > 0)
+          Some(b)
+        else
+          None
+    }
 
   private def reverse(x: Int, y: Int, m: Marker): (Board, Int) = {
     var b = updated(x, y, m)
@@ -105,18 +134,6 @@ object Board {
 }
 
 
-class Move
-case object StartMove extends Move
-case object Pass extends Move
-case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
-  override def toString: String = {
-    val ms = if (m == Dark) "D" else "L"
-    val xs = ('a' + x).asInstanceOf[Char]
-    val ys = ('1' + y).asInstanceOf[Char]
-    ms + "-" + xs + ys
-  }
-}
-
 
 trait Player {
   var marker: Marker = _
@@ -157,7 +174,7 @@ class GreedyPlayer extends Player {
     for (m <- moves) {
       m match {
         case PutMarker(x, y, marker) =>
-          val b = board.play(x, y, marker).get // always Some(b)
+          val b = board.play(m).get // always Some(b)
           val s = score(b)
           if (s > maxS) {
             nextMove = List(m)
@@ -238,7 +255,7 @@ class Depth2Player extends Player {
     for (m <- moves) {
       m match {
         case PutMarker(x, y, marker) =>
-          val b = board.play(x, y, marker).get // always Some(b)
+          val b = board.play(m).get // always Some(b)
           val s = playOpponent(b)
           if (s > maxS) {
             nextMove = List(m)
@@ -261,7 +278,7 @@ class Depth2Player extends Player {
     for (m <- moves) {
       m match {
         case PutMarker(x, y, marker) =>
-          val b = board.play(x, y, opponentMarker).get // always Some(b)
+          val b = board.play(m).get // always Some(b)
           val s = score(b)
           if (s < minS) {
             minS = s
@@ -299,7 +316,7 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
     for (m <- moves) {
       m match {
         case PutMarker(x, y, marker) =>
-          val b = board.play(x, y, marker).get // always Some(b)
+          val b = board.play(m).get // always Some(b)
           val s = playOpponent(b, depth - 1)
           if (s > maxS) {
             nextMove = List((m, s))
@@ -325,7 +342,7 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
     for (m <- moves) {
       m match {
         case PutMarker(x, y, marker) =>
-          val b = board.play(x, y, opponentMarker).get // always Some(b)
+          val b = board.play(m).get // always Some(b)
           val s = play(b, depth - 1)._2
           if (s < minS) {
             minS = s
@@ -363,7 +380,7 @@ class NegamaxPlayer(val maxDepth: Int) extends Player {
     for (m <- moves) {
       m match {
         case PutMarker(x, y, _) =>
-          val b = board.play(x, y, color).get // always Some(b)
+          val b = board.play(m).get // always Some(b)
           val s = -play(b, flipColor(color), depth - 1)._2
           if (s > maxS) {
             nextMove = List((m, s))
@@ -456,7 +473,7 @@ object Game {
       ply += 1
       (move: @unchecked) match {
         case PutMarker(x, y, m) =>
-          val b = board.play(x, y, m)
+          val b = board.play(move)
           b match {
             case Some(d) => board = d
             case None => return Light
@@ -476,7 +493,7 @@ object Game {
       ply += 1
       (move: @unchecked) match {
         case PutMarker(x, y, m) =>
-          val b = board.play(x, y, m)
+          val b = board.play(move)
           b match {
             case Some(d) => board = d
             case None => return Dark
@@ -515,5 +532,7 @@ object Game {
 
 }
 
-}
+} // reversi
+} // boardgame
+
 
