@@ -30,17 +30,17 @@ trait Board {
   def numOfMarkers: (Int, Int)
 }
 
-
-package reversi {
-
-class ReversiBoard private (private val list: List[Marker]) extends Board {
+abstract class ListBoard[B <: Board] protected (protected val list: List[Marker])
+    extends Board {
 
   def this() = this(List.fill(64) { Blank })
 
+  protected def toBoard(list: List[Marker]): B
+
   def apply(x: Int, y: Int): Marker = list(xyToIndex(x, y))
 
-  def updated(x: Int, y: Int, m: Marker): ReversiBoard =
-    new ReversiBoard(list.updated(xyToIndex(x, y), m))
+  def updated(x: Int, y: Int, m: Marker): B =
+    toBoard(list.updated(xyToIndex(x, y), m))
 
   def isClear(x: Int, y: Int): Boolean = apply(x, y) == Blank
 
@@ -70,6 +70,36 @@ class ReversiBoard private (private val list: List[Marker]) extends Board {
     } yield ay + l.mkString + ay + '\n'
     ax + b.mkString + ax
   }
+
+}
+
+
+trait Player {
+  var marker: Marker = _
+  var opponentMarker: Marker = _
+  var name: String = ""
+
+  def init(m: Marker) {
+    marker = m
+    opponentMarker = flipColor(m)
+  }
+  
+  def play(board: Board, last: Move): Move
+
+  def flipColor(m: Marker): Marker =
+    if (m == Dark) Light else Dark
+}
+
+
+package reversi {
+
+class ReversiBoard protected (list: List[Marker])
+    extends ListBoard[ReversiBoard](list) {
+
+  def this() = this(List.fill(64) { Blank })
+
+  override def toBoard(list: List[Marker]): ReversiBoard =
+    new ReversiBoard(list)
 
   def play(move: Move): Option[ReversiBoard] =
     move match {
@@ -132,23 +162,6 @@ object ReversiBoard {
                         .updated(4, 3, Dark)
 }
 
-
-
-trait Player {
-  var marker: Marker = _
-  var opponentMarker: Marker = _
-  var name: String = ""
-
-  def init(m: Marker) {
-    marker = m
-    opponentMarker = flipColor(m)
-  }
-  
-  def play(board: Board, last: Move): Move
-
-  def flipColor(m: Marker): Marker =
-    if (m == Dark) Light else Dark
-}
 
 
 class RandomPlayer extends Player {
