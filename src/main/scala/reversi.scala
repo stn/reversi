@@ -1,4 +1,4 @@
-package boardgame {
+package game {
 
 import scala.collection._
 import scala.util.Random
@@ -33,18 +33,47 @@ trait Board {
 
 package reversi {
 
-class ListBoard protected (protected val grid: List[Marker]) extends Board {
+class ReversiBoard private (private val list: List[Marker]) extends Board {
 
   def this() = this(List.fill(64) { Blank })
 
-  def apply(x: Int, y: Int): Marker = grid(xyToIndex(x, y))
+  def apply(x: Int, y: Int): Marker = list(xyToIndex(x, y))
 
-  def updated(x: Int, y: Int, m: Marker): ListBoard =
-    new ListBoard(grid.updated(xyToIndex(x, y), m))
+  def updated(x: Int, y: Int, m: Marker): ReversiBoard =
+    new ReversiBoard(list.updated(xyToIndex(x, y), m))
 
-  def play(move: Move): Option[ListBoard] =
+  def isClear(x: Int, y: Int): Boolean = apply(x, y) == Blank
+
+  def isFull: Boolean = list.forall { _ != Blank }
+  
+  private def xyToIndex(x: Int, y: Int) = x + y * 8
+  
+  def numOfMarkers: (Int, Int) = {
+    var b = 0
+    var w = 0
+    for (m <- list) {
+      m match {
+        case Dark => b += 1
+        case Light => w += 1
+        case _ => //
+      }
+    }
+    (b, w)
+  }
+
+  override def toString: String = {
+    val map = Map(Blank -> '.', Dark -> 'X', Light -> 'O')
+    val ax = " abcdefgh \n"
+    val b = for {y <- 0 until 8
+                 ay = ('1' + y).asInstanceOf[Char]
+                 l = for (x <- 0 until 8) yield map(apply(x, y))
+    } yield ay + l.mkString + ay + '\n'
+    ax + b.mkString + ax
+  }
+
+  def play(move: Move): Option[ReversiBoard] =
     move match {
-      case StartMove => Some(ListBoard.Start)
+      case StartMove => Some(ReversiBoard.Start)
       case Pass => Some(this)
       case PutMarker(x, y, m) =>
         if (!isClear(x, y)) return None
@@ -55,9 +84,7 @@ class ListBoard protected (protected val grid: List[Marker]) extends Board {
           None
     }
 
-  private def isClear(x: Int, y: Int): Boolean = apply(x, y) == Blank
-
-  private def reverse(x: Int, y: Int, m: Marker): (ListBoard, Int) = {
+  private def reverse(x: Int, y: Int, m: Marker): (ReversiBoard, Int) = {
     var b = updated(x, y, m)
     var n = 0
     for (t <- List((-1, -1), (-1, 0), (-1, 1),
@@ -70,7 +97,7 @@ class ListBoard protected (protected val grid: List[Marker]) extends Board {
     (b, n)
   }
 
-  private def reverseDxDy(x: Int, y: Int, dx: Int, dy: Int, m: Marker): (ListBoard, Int) = {
+  private def reverseDxDy(x: Int, y: Int, dx: Int, dy: Int, m: Marker): (ReversiBoard, Int) = {
     val n = if (m == Dark) Light else Dark
     var b = this
     var c = 0
@@ -86,23 +113,6 @@ class ListBoard protected (protected val grid: List[Marker]) extends Board {
     else (this, 0)
   }
 
-  private def xyToIndex(x: Int, y: Int) = x + y * 8
-
-  def isFull: Boolean = grid.forall { _ != Blank }
-  
-  def numOfMarkers: (Int, Int) = {
-    var b = 0
-    var w = 0
-    for (m <- grid) {
-      m match {
-        case Dark => b += 1
-        case Light => w += 1
-        case _ => //
-      }
-    }
-    (b, w)
-  }
-
   def possibleMoves(m: Marker): Seq[Move] =
     for { x <- 0 until 8
           y <- 0 until 8
@@ -111,24 +121,15 @@ class ListBoard protected (protected val grid: List[Marker]) extends Board {
           if (n > 0)
     } yield PutMarker(x, y, m)
 
-  override def toString: String = {
-    val map = Map(Blank -> '.', Dark -> 'X', Light -> 'O')
-    val ax = " abcdefgh \n"
-    val b = for {y <- 0 until 8
-                 ay = ('1' + y).asInstanceOf[Char]
-                 l = for (x <- 0 until 8) yield map(apply(x, y))
-    } yield ay + l.mkString + ay + '\n'
-    ax + b.mkString + ax
-  }
-
 }
 
 
-object ListBoard {
-  val Start: ListBoard = new ListBoard().updated(3, 3, Light)
-                                              .updated(4, 4, Light)
-                                              .updated(3, 4, Dark)
-                                              .updated(4, 3, Dark)
+object ReversiBoard {
+  val Start: ReversiBoard =
+      new ReversiBoard().updated(3, 3, Light)
+                        .updated(4, 4, Light)
+                        .updated(3, 4, Dark)
+                        .updated(4, 3, Dark)
 }
 
 
@@ -432,7 +433,7 @@ object Game {
       }
 
   def play(player1: Player, player2: Player): Marker = {
-    var board = ListBoard.Start
+    var board = ReversiBoard.Start
     var move: Move = StartMove
     player1.init(Dark)
     player2.init(Light)
@@ -506,7 +507,5 @@ object Game {
 
 }
 
-} // reversi
-} // boardgame
-
-
+}
+}
