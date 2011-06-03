@@ -7,8 +7,8 @@ import scala.util.Random
 import boardgame.Marker._
 
 
-class RandomPlayer extends Player {
-  def play(board: Board, last: Move): Move = {
+class RandomPlayer extends Player[ReversiBoard] {
+  def play(board: ReversiBoard, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
       return Pass
@@ -17,9 +17,9 @@ class RandomPlayer extends Player {
   }
 }
 
-class GreedyPlayer extends Player {
+class GreedyPlayer extends Player[ReversiBoard] {
 
-  def play(board: Board, last: Move): Move = {
+  def play(board: ReversiBoard, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
       return Pass
@@ -39,16 +39,16 @@ class GreedyPlayer extends Player {
     nextMove(Random.nextInt(nextMove.length))
   }
 
-  def score(board: Board): Int = {
+  def score(board: ReversiBoard): Int = {
     val (d, w) = board.numOfMarkers
     if (marker == Dark) d - w else w - d
   }
 
 }
 
-class SimpleHeuristicsPlayer extends Player {
+class SimpleHeuristicsPlayer extends Player[ReversiBoard] {
 
-  def play(board: Board, last: Move): Move = {
+  def play(board: ReversiBoard, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
       return Pass
@@ -94,9 +94,9 @@ class SimpleHeuristicsPlayer extends Player {
 }
 
 
-class Depth2Player extends Player {
+class Depth2Player extends Player[ReversiBoard] {
 
-  def play(board: Board, last: Move): Move = {
+  def play(board: ReversiBoard, last: Move): Move = {
     val moves = board.possibleMoves(marker)
     if (moves.isEmpty) {
       return Pass
@@ -116,7 +116,7 @@ class Depth2Player extends Player {
     nextMove(Random.nextInt(nextMove.length))
   }
 
-  def playOpponent(board: Board): Int = {
+  def playOpponent(board: ReversiBoard): Int = {
     val moves = board.possibleMoves(opponentMarker)
     if (moves.isEmpty) {
       return score(board)
@@ -132,21 +132,21 @@ class Depth2Player extends Player {
     minS
   }
 
-  def score(board: Board): Int = {
+  def score(board: ReversiBoard): Int = {
     val (d, w) = board.numOfMarkers
     if (marker == Dark) d - w else w - d
   }
 
 }
 
-class MinmaxPlayer(val maxDepth: Int) extends Player {
+class MinmaxPlayer(val maxDepth: Int) extends Player[ReversiBoard] {
 
-  def play(board: Board, last: Move): Move = {
+  def play(board: ReversiBoard, last: Move): Move = {
     val (m, s) = play(board, maxDepth)
     m
   }
 
-  def play(board: Board, depth: Int): (Move, Int) = {
+  def play(board: ReversiBoard, depth: Int): (Move, Int) = {
     if (depth == 0) {
       return (Pass, score(board))
     }
@@ -169,7 +169,7 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
     nextMove(Random.nextInt(nextMove.length))
   }
 
-  def playOpponent(board: Board, depth: Int): Int = {
+  def playOpponent(board: ReversiBoard, depth: Int): Int = {
     if (depth == 0) {
       return score(board)
     }
@@ -188,21 +188,21 @@ class MinmaxPlayer(val maxDepth: Int) extends Player {
     minS
   }
   
-  def score(board: Board): Int = {
+  def score(board: ReversiBoard): Int = {
     val (d, w) = board.numOfMarkers
     if (marker == Dark) d - w else w - d
   }
 
 }
 
-class NegamaxPlayer(val maxDepth: Int) extends Player {
+class NegamaxPlayer(val maxDepth: Int) extends Player[ReversiBoard] {
 
-  def play(board: Board, last: Move): Move = {
+  def play(board: ReversiBoard, last: Move): Move = {
     val (m, s) = play(board, marker, maxDepth)
     m
   }
 
-  def play(board: Board, color: Marker, depth: Int): (Move, Int) = {
+  def play(board: ReversiBoard, color: Marker, depth: Int): (Move, Int) = {
     if (depth == 0) {
       return (Pass, score(board))
     }
@@ -225,7 +225,7 @@ class NegamaxPlayer(val maxDepth: Int) extends Player {
     nextMove(Random.nextInt(nextMove.length))
   }
   
-  def score(board: Board): Int = {
+  def score(board: ReversiBoard): Int = {
     val (d, w) = board.numOfMarkers
     if (marker == Dark) d - w else w - d
   }

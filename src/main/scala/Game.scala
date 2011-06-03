@@ -62,7 +62,7 @@ object Game {
           args
       }
 
-  def play(player1: Player, player2: Player): Marker = {
+  def play(player1: Player[ReversiBoard], player2: Player[ReversiBoard]): Marker = {
     var board = ReversiBoard.Start
     var move: Move = StartMove
     player1.init(Dark)
@@ -71,7 +71,7 @@ object Game {
     var ply = 1
     var pass1 = false
     var pass2 = false
-    while (!board.isFull) {
+    while (!board.isTerminal) {
       move = player1.play(board, move)
       if (verbose)
         printf("%d: %s\n", ply, move)
@@ -89,7 +89,7 @@ object Game {
       }
       if (verbose)
         println(board)
-      if ((pass1 && pass2) || board.isFull) {
+      if ((pass1 && pass2) || board.isTerminal) {
         return winner(board)
       }
       move = player2.play(board, move)
@@ -116,14 +116,14 @@ object Game {
     winner(board)
   }
 
-  private def winner(board: Board): Marker = {
+  private def winner(board: ReversiBoard): Marker = {
     val (b, w) = board.numOfMarkers
     if (b < w) Light
     else if (w < b) Dark
     else Blank
   }
 
-  def playN(n: Int, player1: Player, player2: Player): Map[Marker, Int] = {
+  def playN(n: Int, player1: Player[ReversiBoard], player2: Player[ReversiBoard]): Map[Marker, Int] = {
     val scoreMap = mutable.Map[Marker, Int](Blank -> 0, Dark -> 0, Light -> 0)
     for (i <- 0 until n) {
       play(player1, player2) match {

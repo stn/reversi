@@ -12,22 +12,29 @@ case object StartMove extends Move
 case object Pass extends Move
 case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
   override def toString: String = {
-    val ms = if (m == Dark) "D" else "L"
+    val ms = m.toString.charAt(0)
     val xs = ('a' + x).asInstanceOf[Char]
     val ys = ('1' + y).asInstanceOf[Char]
     ms + "-" + xs + ys
   }
 }
 
-trait Board {
-  def apply(x: Int, y: Int): Marker
-  def updated(x: Int, y: Int, m: Marker): Board
-  def play(move: Move): Option[Board]
+trait Node {
+//  def apply(x: Int, y: Int): Marker
+//  def updated(x: Int, y: Int, m: Marker): Board
+  def play(move: Move): Option[Node]
   def possibleMoves(m: Marker): Seq[Move]
+  def isTerminal: Boolean
+//  def isFull: Boolean
+}
+
+trait Board[Repr <: Board[Repr]] {
+  def apply(x: Int, y: Int): Marker
+  def updated(x: Int, y: Int, m: Marker): Repr
   def numOfMarkers: (Int, Int)
 }
 
-trait Player {
+trait Player[T <: Node] {
   var marker: Marker = _
   var opponentMarker: Marker = _
   var name: String = ""
@@ -37,9 +44,9 @@ trait Player {
     opponentMarker = flipColor(m)
   }
   
-  def play(board: Board, last: Move): Move
+  def play(node: T, last: Move): Move
 
-  def flipColor(m: Marker): Marker =
+  protected def flipColor(m: Marker): Marker =
     if (m == Dark) Light else Dark
 }
 
