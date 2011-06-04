@@ -10,14 +10,6 @@ import Marker._
 class Move
 case object StartMove extends Move
 case object Pass extends Move
-case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
-  override def toString: String = {
-    val ms = m.toString.charAt(0)
-    val xs = ('a' + x).asInstanceOf[Char]
-    val ys = ('1' + y).asInstanceOf[Char]
-    ms + "-" + xs + ys
-  }
-}
 
 trait Node[Repr <: Node[Repr]] {
   def play(move: Move): Option[Repr]
