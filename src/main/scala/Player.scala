@@ -6,7 +6,7 @@ import scala.util.Random
 import boardgame.Marker._
 
 
-class RandomPlayer[N <: Node] extends Player[N] {
+class RandomPlayer[N <: Node[N]] extends Player[N] {
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
     if (moves.isEmpty) {
@@ -16,7 +16,7 @@ class RandomPlayer[N <: Node] extends Player[N] {
   }
 }
 
-abstract class GreedyPlayer[N <: Node] extends Player[N] {
+abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
@@ -38,11 +38,11 @@ abstract class GreedyPlayer[N <: Node] extends Player[N] {
     nextMove(Random.nextInt(nextMove.length))
   }
 
-  def score(node: Node): Int
+  def score(node: N): Int
 
 }
 
-class SimpleHeuristicsPlayer[N <: Node] extends Player[N] {
+class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
@@ -90,7 +90,7 @@ class SimpleHeuristicsPlayer[N <: Node] extends Player[N] {
 }
 
 
-class Depth2Player[N <: Node] extends Player[N] {
+abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
@@ -115,12 +115,12 @@ class Depth2Player[N <: Node] extends Player[N] {
   def playOpponent(node: N): Int = {
     val moves = node.possibleMoves(opponentMarker)
     if (moves.isEmpty) {
-      return score(board)
+      return score(node)
     }
     var minS = 1000
     for (m <- moves) {
-      val b = node.play(m).get // always Some(b)
-      val s = score(b)
+      val n = node.play(m).get // always Some(b)
+      val s = score(n)
       if (s < minS) {
         minS = s
       }
@@ -128,33 +128,30 @@ class Depth2Player[N <: Node] extends Player[N] {
     minS
   }
 
-  def score(node: N): Int = {
-    val (d, w) = node.numOfMarkers
-    if (marker == Dark) d - w else w - d
-  }
+  def score(node: N): Int
 
 }
 
-class MinmaxPlayer[N <: Node](val maxDepth: Int) extends Player[N] {
+abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
-    val (m, s) = play(board, maxDepth)
+    val (m, s) = play(node, maxDepth)
     m
   }
 
   def play(node: N, depth: Int): (Move, Int) = {
     if (depth == 0) {
-      return (Pass, score(board))
+      return (Pass, score(node))
     }
     val moves = node.possibleMoves(marker)
     if (moves.isEmpty) {
-      return (Pass, score(board))
+      return (Pass, score(node))
     }
     var nextMove = List[(Move, Int)]()
     var maxS = -1000
     for (m <- moves) {
-      val b = node.play(m).get // always Some(b)
-      val s = playOpponent(b, depth - 1)
+      val n = node.play(m).get // always Some(b)
+      val s = playOpponent(n, depth - 1)
       if (s > maxS) {
         nextMove = List((m, s))
         maxS = s
@@ -167,16 +164,16 @@ class MinmaxPlayer[N <: Node](val maxDepth: Int) extends Player[N] {
 
   def playOpponent(node: N, depth: Int): Int = {
     if (depth == 0) {
-      return score(board)
+      return score(node)
     }
     val moves = node.possibleMoves(opponentMarker)
     if (moves.isEmpty) {
-      return score(board)
+      return score(node)
     }
     var minS = 1000
     for (m <- moves) {
-      val b = node.play(m).get // always Some(b)
-      val s = play(b, depth - 1)._2
+      val n = node.play(m).get // always Some(b)
+      val s = play(n, depth - 1)._2
       if (s < minS) {
         minS = s
       }
@@ -184,33 +181,30 @@ class MinmaxPlayer[N <: Node](val maxDepth: Int) extends Player[N] {
     minS
   }
   
-  def score(node: N): Int = {
-    val (d, w) = node.numOfMarkers
-    if (marker == Dark) d - w else w - d
-  }
+  def score(node: N): Int
 
 }
 
-class NegamaxPlayer[N <: Node](val maxDepth: Int) extends Player[N] {
+abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
-    val (m, s) = play(board, marker, maxDepth)
+    val (m, s) = play(node, marker, maxDepth)
     m
   }
 
   def play(node: N, color: Marker, depth: Int): (Move, Int) = {
     if (depth == 0) {
-      return (Pass, score(board))
+      return (Pass, score(node))
     }
     val moves = node.possibleMoves(color)
     if (moves.isEmpty) {
-      return (Pass, score(board))
+      return (Pass, score(node))
     }
     var nextMove = List[(Move, Int)]()
     var maxS = -1000
     for (m <- moves) {
-      val b = node.play(m).get // always Some(b)
-      val s = -play(b, flipColor(color), depth - 1)._2
+      val n = node.play(m).get // always Some(b)
+      val s = -play(n, flipColor(color), depth - 1)._2
       if (s > maxS) {
         nextMove = List((m, s))
         maxS = s
@@ -221,10 +215,7 @@ class NegamaxPlayer[N <: Node](val maxDepth: Int) extends Player[N] {
     nextMove(Random.nextInt(nextMove.length))
   }
   
-  def score(node: N): Int = {
-    val (d, w) = node.numOfMarkers
-    if (marker == Dark) d - w else w - d
-  }
+  def score(node: N): Int
 
 }
 

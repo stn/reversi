@@ -11,12 +11,12 @@ object Game {
   val players = Map[String, Player[ReversiNode]](
       "random" -> new RandomPlayer[ReversiNode],
       "greedy" -> new GreedyPlayer[ReversiNode] with MarkersScore,
-      "simple_heuristics" -> new SimpleHeuristicsPlayer,
-      "depth2" -> new Depth2Player[ReversiNode],
-      "minmax2" -> new MinmaxPlayer[ReversiNode](2),
-      "minmax3" -> new MinmaxPlayer[ReversiNode](3),
-      "minmax4" -> new MinmaxPlayer[ReversiNode](4),
-      "negamax2" -> new NegamaxPlayer[ReversiNode](2)
+      "simple_heuristics" -> new SimpleHeuristicsPlayer[ReversiNode],
+      "depth2" -> new Depth2Player[ReversiNode] with MarkersScore,
+      "minmax2" -> new MinmaxPlayer[ReversiNode](2) with MarkersScore,
+      "minmax3" -> new MinmaxPlayer[ReversiNode](3) with MarkersScore,
+      "minmax4" -> new MinmaxPlayer[ReversiNode](4) with MarkersScore,
+      "negamax2" -> new NegamaxPlayer[ReversiNode](2) with MarkersScore
   )
 
   var numOfGames = 0

@@ -19,14 +19,14 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
   }
 }
 
-trait Node {
+trait Node[Repr <: Node[Repr]] {
 //  def apply(x: Int, y: Int): Marker
 //  def updated(x: Int, y: Int, m: Marker): Board
-  def play(move: Move): Option[Node]
+  def play(move: Move): Option[Repr]
   def possibleMoves(m: Marker): Seq[Move]
   def isTerminal: Boolean
 //  def isFull: Boolean
-  def score: Int
+//  def score: Int
 }
 
 trait Board {
@@ -35,7 +35,7 @@ trait Board {
   def numOfMarkers: (Int, Int)
 }
 
-trait Player[N <: Node] {
+trait Player[N <: Node[N]] {
   var marker: Marker = _
   var opponentMarker: Marker = _
   var name: String = ""

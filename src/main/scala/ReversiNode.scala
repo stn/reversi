@@ -10,7 +10,7 @@ import boardgame.Marker._
 class ReversiNode (
     val board: ListBoard,
     val passed: Boolean
-) extends Node {
+) extends Node[ReversiNode] {
   
   def this() = this(new ListBoard, false)
   def this(board: ListBoard) = this(board, false)
@@ -88,11 +88,10 @@ object ReversiNode {
 
 trait MarkersScore {
 
-  val board: ListBoard
-  val marker: Marker
+  var marker: Marker
 
-  def score: Int = {
-    val (d, w) = board.numOfMarkers
+  def score(node: ReversiNode): Int = {
+    val (d, w) = node.board.numOfMarkers
     if (marker == Dark) d - w else w - d
   }
 
