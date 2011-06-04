@@ -68,9 +68,9 @@ class ReversiNode (
   def isTerminal: Boolean = board.isFull
 
   def winner: Marker = {
-    val (b, w) = board.numOfMarkers
-    if (b < w) Light
-    else if (w < b) Dark
+    val nums = board.numOfMarkers
+    if (nums(Dark) < nums(Light)) Light
+    else if (nums(Light) < nums(Dark)) Dark
     else Blank
   }
 
@@ -94,8 +94,8 @@ trait MarkersScore {
   var marker: Marker
 
   def score(node: ReversiNode): Int = {
-    val (d, w) = node.board.numOfMarkers
-    if (marker == Dark) d - w else w - d
+    val nums = node.board.numOfMarkers
+    if (marker == Dark) nums(Dark) - nums(Light) else nums(Light) - nums(Dark)
   }
 
 }

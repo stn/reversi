@@ -28,7 +28,7 @@ trait Node[Repr <: Node[Repr]] {
 trait Board {
   def apply(x: Int, y: Int): Marker
   def updated(x: Int, y: Int, m: Marker): Board
-  def numOfMarkers: (Int, Int)
+  def numOfMarkers: Map[Marker, Int]
 }
 
 trait Player[N <: Node[N]] {

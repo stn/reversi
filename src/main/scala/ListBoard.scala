@@ -1,10 +1,12 @@
 package boardgame
 
+import scala.collection.mutable
+
 import boardgame.Marker._
 
 
 class ListBoard (
-  protected val list: List[Marker]
+  private val list: List[Marker]
 ) extends Board {
 
   def this() = this(List.fill(64) { Blank })
@@ -14,19 +16,15 @@ class ListBoard (
   override def updated(x: Int, y: Int, m: Marker): ListBoard =
     new ListBoard(list.updated(index(x, y), m))
 
-  protected def index(x: Int, y: Int) = x + y * 8
+  private def index(x: Int, y: Int) = x + y * 8
   
-  override def numOfMarkers: (Int, Int) = {
-    var b = 0
-    var w = 0
+  override def numOfMarkers: Map[Marker, Int] = {
+    val map = mutable.HashMap.empty ++
+        (Marker.values map {_ -> 0})
     for (m <- list) {
-      m match {
-        case Dark => b += 1
-        case Light => w += 1
-        case _ => //
-      }
+      map(m) = map(m) + 1
     }
-    (b, w)
+    map.toMap
   }
 
   override def toString: String = {
