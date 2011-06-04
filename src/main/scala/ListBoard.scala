@@ -14,8 +14,6 @@ class ListBoard (
   override def updated(x: Int, y: Int, m: Marker): ListBoard =
     new ListBoard(list.updated(index(x, y), m))
 
-//  def isClear(x: Int, y: Int): Boolean = list(index(x, y)) == Blank
-
   protected def index(x: Int, y: Int) = x + y * 8
   
   override def numOfMarkers: (Int, Int) = {

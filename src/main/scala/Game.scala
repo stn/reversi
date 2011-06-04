@@ -13,7 +13,7 @@ object Game {
   var verbose = false
 
   def loadPlayer(name: String): Player[ReversiNode] =
-    name match {
+    (name: @unchecked) match {
       case "random" => new RandomPlayer[ReversiNode]
       case "greedy" => new GreedyPlayer[ReversiNode] with MarkersScore
       case "simple_heuristics" => new SimpleHeuristicsPlayer[ReversiNode]
@@ -22,14 +22,13 @@ object Game {
       case "minmax3" => new MinmaxPlayer[ReversiNode](3) with MarkersScore
       case "minmax4" => new MinmaxPlayer[ReversiNode](4) with MarkersScore
       case "negamax2" => new NegamaxPlayer[ReversiNode](2) with MarkersScore
-      case n => sys.error("no player named " + n)
     }
 
   def main(originalArgs: Array[String]) {
     var args = parseOptions(originalArgs.toList)
 
     if (args.length < 2) {
-      sys.println("Please specify players")
+      println("Please specify players")
       sys.exit(1)
     }
 
@@ -85,7 +84,7 @@ object Game {
           val n = node.play(move)
           n match {
             case Some(d) => node = d
-            case None => return Light
+            case None => return Light // illegal move of Dark
           }
           pass1 = false
         case Pass =>
@@ -105,7 +104,7 @@ object Game {
           val n = node.play(move)
           n match {
             case Some(d) => node = d
-            case None => return Dark
+            case None => return Dark // illegal move of Light
           }
           pass2 = false
         case Pass =>

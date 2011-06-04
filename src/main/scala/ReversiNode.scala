@@ -74,6 +74,9 @@ class ReversiNode (
     else Blank
   }
 
+  override def toString: String =
+    board.toString
+
 }
 
 

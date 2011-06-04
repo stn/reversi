@@ -26,7 +26,7 @@ abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
     var nextMove = List[Move]()
     var maxS = -1000
     for (m <- moves) {
-      val n = node.play(m).get // always Some(b)
+      val n = node.play(m).get
       val s = score(n)
       if (s > maxS) {
         nextMove = List(m)
@@ -52,7 +52,7 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
     var nextMove = List[Move]()
     var maxS = -1000
     for (m <- moves) {
-      m match {
+      (m: @unchecked) match {
         case PutMarker(x, y, _) =>
           val s = score(x, y)
           if (s > maxS) {
@@ -61,7 +61,6 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
           } else if (s == maxS) {
             nextMove = m :: nextMove
           }
-        case _ => //
       }
     }
     nextMove(Random.nextInt(nextMove.length))
@@ -100,7 +99,7 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
     var nextMove = List[Move]()
     var maxS = -1000
     for (m <- moves) {
-      val n = node.play(m).get // always Some(b)
+      val n = node.play(m).get
       val s = playOpponent(n)
       if (s > maxS) {
         nextMove = List(m)
@@ -119,7 +118,7 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
     }
     var minS = 1000
     for (m <- moves) {
-      val n = node.play(m).get // always Some(b)
+      val n = node.play(m).get
       val s = score(n)
       if (s < minS) {
         minS = s
@@ -150,7 +149,7 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
     var nextMove = List[(Move, Int)]()
     var maxS = -1000
     for (m <- moves) {
-      val n = node.play(m).get // always Some(b)
+      val n = node.play(m).get
       val s = playOpponent(n, depth - 1)
       if (s > maxS) {
         nextMove = List((m, s))
@@ -172,7 +171,7 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
     }
     var minS = 1000
     for (m <- moves) {
-      val n = node.play(m).get // always Some(b)
+      val n = node.play(m).get
       val s = play(n, depth - 1)._2
       if (s < minS) {
         minS = s
@@ -203,7 +202,7 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
     var nextMove = List[(Move, Int)]()
     var maxS = -1000
     for (m <- moves) {
-      val n = node.play(m).get // always Some(b)
+      val n = node.play(m).get
       val s = -play(n, flipColor(color), depth - 1)._2
       if (s > maxS) {
         nextMove = List((m, s))
