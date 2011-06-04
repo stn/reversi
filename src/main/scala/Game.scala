@@ -8,31 +8,34 @@ import boardgame.Marker._
 
 
 object Game {
-  val players = Map[String, Player[ReversiNode]](
-      "random" -> new RandomPlayer[ReversiNode],
-      "greedy" -> new GreedyPlayer[ReversiNode] with MarkersScore,
-      "simple_heuristics" -> new SimpleHeuristicsPlayer[ReversiNode],
-      "depth2" -> new Depth2Player[ReversiNode] with MarkersScore,
-      "minmax2" -> new MinmaxPlayer[ReversiNode](2) with MarkersScore,
-      "minmax3" -> new MinmaxPlayer[ReversiNode](3) with MarkersScore,
-      "minmax4" -> new MinmaxPlayer[ReversiNode](4) with MarkersScore,
-      "negamax2" -> new NegamaxPlayer[ReversiNode](2) with MarkersScore
-  )
 
   var numOfGames = 0
   var verbose = false
+
+  def loadPlayer(name: String): Player[ReversiNode] =
+    name match {
+      case "random" => new RandomPlayer[ReversiNode]
+      case "greedy" => new GreedyPlayer[ReversiNode] with MarkersScore
+      case "simple_heuristics" => new SimpleHeuristicsPlayer[ReversiNode]
+      case "depth2" => new Depth2Player[ReversiNode] with MarkersScore
+      case "minmax2" => new MinmaxPlayer[ReversiNode](2) with MarkersScore
+      case "minmax3" => new MinmaxPlayer[ReversiNode](3) with MarkersScore
+      case "minmax4" => new MinmaxPlayer[ReversiNode](4) with MarkersScore
+      case "negamax2" => new NegamaxPlayer[ReversiNode](2) with MarkersScore
+      case n => sys.error("no player named " + n)
+    }
 
   def main(originalArgs: Array[String]) {
     var args = parseOptions(originalArgs.toList)
 
     if (args.length < 2) {
-      println("Please specify players")
-      System.exit(1)
+      sys.println("Please specify players")
+      sys.exit(1)
     }
 
-    val player1 = players(args(0))
+    val player1 = loadPlayer(args(0))
     player1.name = args(0)
-    val player2 = players(args(1))
+    val player2 = loadPlayer(args(1))
     player2.name = args(1)
 
     if (numOfGames == 0) {
