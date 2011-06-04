@@ -72,51 +72,37 @@ object Game {
     player2.init(Light)
 
     var ply = 1
-    var pass1 = false
-    var pass2 = false
-    while (!node.isTerminal) {
+    while (true) {
+      // player1
       move = player1.play(node, move)
       if (verbose)
         printf("%d: %s\n", ply, move)
       ply += 1
-      (move: @unchecked) match {
-        case PutMarker(_,_,_) =>
-          val n = node.play(move)
-          n match {
-            case Some(d) => node = d
-            case None => return Light // illegal move of Dark
-          }
-          pass1 = false
-        case Pass =>
-          pass1 = true
+      node.play(move) match {
+        case Some(d) => node = d
+        case None => return Light // illegal move of Dark
       }
       if (verbose)
         println(node)
-      if ((pass1 && pass2) || node.isTerminal) {
+      if (node.isTerminal) {
         return node.winner
       }
+      // player2
       move = player2.play(node, move)
       if (verbose)
         printf("%d: %s\n", ply, move)
       ply += 1
-      (move: @unchecked) match {
-        case PutMarker(x, y, m) =>
-          val n = node.play(move)
-          n match {
-            case Some(d) => node = d
-            case None => return Dark // illegal move of Light
-          }
-          pass2 = false
-        case Pass =>
-          pass2 = true
+      node.play(move) match {
+        case Some(d) => node = d
+        case None => return Dark // illegal move of Light
       }
       if (verbose)
         println(node)
-      if (pass1 && pass2) {
+      if (node.isTerminal) {
         return node.winner
       }
     }
-    node.winner
+    Blank // Just compiler happy
   }
 
   def playN(n: Int, player1: Player[ReversiNode], player2: Player[ReversiNode]): Map[Marker, Int] = {
