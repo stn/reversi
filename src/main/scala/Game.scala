@@ -8,15 +8,16 @@ import boardgame.Marker._
 
 
 object Game {
-  val players = Map("random" -> new RandomPlayer,
-                    "greedy" -> new GreedyPlayer,
-                    "simple_heuristics" -> new SimpleHeuristicsPlayer,
-                    "depth2" -> new Depth2Player,
-                    "minmax2" -> new MinmaxPlayer(2),
-                    "minmax3" -> new MinmaxPlayer(3),
-                    "minmax4" -> new MinmaxPlayer(4),
-                    "negamax2" -> new NegamaxPlayer(2)
-                    )
+  val players = Map[String, Player[ReversiNode]](
+      "random" -> new RandomPlayer[ReversiNode],
+      "greedy" -> new GreedyPlayer[ReversiNode] with MarkersScore,
+      "simple_heuristics" -> new SimpleHeuristicsPlayer,
+      "depth2" -> new Depth2Player[ReversiNode],
+      "minmax2" -> new MinmaxPlayer[ReversiNode](2),
+      "minmax3" -> new MinmaxPlayer[ReversiNode](3),
+      "minmax4" -> new MinmaxPlayer[ReversiNode](4),
+      "negamax2" -> new NegamaxPlayer[ReversiNode](2)
+  )
 
   var numOfGames = 0
   var verbose = false
@@ -62,8 +63,8 @@ object Game {
           args
       }
 
-  def play(player1: Player[ReversiBoard], player2: Player[ReversiBoard]): Marker = {
-    var board = ReversiBoard.Start
+  def play(player1: Player[ReversiNode], player2: Player[ReversiNode]): Marker = {
+    var node = ReversiNode.Start
     var move: Move = StartMove
     player1.init(Dark)
     player2.init(Light)
@@ -71,16 +72,16 @@ object Game {
     var ply = 1
     var pass1 = false
     var pass2 = false
-    while (!board.isTerminal) {
-      move = player1.play(board, move)
+    while (!node.isTerminal) {
+      move = player1.play(node, move)
       if (verbose)
         printf("%d: %s\n", ply, move)
       ply += 1
       (move: @unchecked) match {
         case PutMarker(_,_,_) =>
-          val b = board.play(move)
-          b match {
-            case Some(d) => board = d
+          val n = node.play(move)
+          n match {
+            case Some(d) => node = d
             case None => return Light
           }
           pass1 = false
@@ -88,19 +89,19 @@ object Game {
           pass1 = true
       }
       if (verbose)
-        println(board)
-      if ((pass1 && pass2) || board.isTerminal) {
-        return winner(board)
+        println(node)
+      if ((pass1 && pass2) || node.isTerminal) {
+        return node.winner
       }
-      move = player2.play(board, move)
+      move = player2.play(node, move)
       if (verbose)
         printf("%d: %s\n", ply, move)
       ply += 1
       (move: @unchecked) match {
         case PutMarker(x, y, m) =>
-          val b = board.play(move)
-          b match {
-            case Some(d) => board = d
+          val n = node.play(move)
+          n match {
+            case Some(d) => node = d
             case None => return Dark
           }
           pass2 = false
@@ -108,22 +109,15 @@ object Game {
           pass2 = true
       }
       if (verbose)
-        println(board)
+        println(node)
       if (pass1 && pass2) {
-        return winner(board)
+        return node.winner
       }
     }
-    winner(board)
+    node.winner
   }
 
-  private def winner(board: ReversiBoard): Marker = {
-    val (b, w) = board.numOfMarkers
-    if (b < w) Light
-    else if (w < b) Dark
-    else Blank
-  }
-
-  def playN(n: Int, player1: Player[ReversiBoard], player2: Player[ReversiBoard]): Map[Marker, Int] = {
+  def playN(n: Int, player1: Player[ReversiNode], player2: Player[ReversiNode]): Map[Marker, Int] = {
     val scoreMap = mutable.Map[Marker, Int](Blank -> 0, Dark -> 0, Light -> 0)
     for (i <- 0 until n) {
       play(player1, player2) match {

@@ -26,15 +26,16 @@ trait Node {
   def possibleMoves(m: Marker): Seq[Move]
   def isTerminal: Boolean
 //  def isFull: Boolean
+  def score: Int
 }
 
-trait Board[Repr <: Board[Repr]] {
+trait Board {
   def apply(x: Int, y: Int): Marker
-  def updated(x: Int, y: Int, m: Marker): Repr
+  def updated(x: Int, y: Int, m: Marker): Board
   def numOfMarkers: (Int, Int)
 }
 
-trait Player[T <: Node] {
+trait Player[N <: Node] {
   var marker: Marker = _
   var opponentMarker: Marker = _
   var name: String = ""
@@ -44,7 +45,7 @@ trait Player[T <: Node] {
     opponentMarker = flipColor(m)
   }
   
-  def play(node: T, last: Move): Move
+  def play(node: N, last: Move): Move
 
   protected def flipColor(m: Marker): Marker =
     if (m == Dark) Light else Dark

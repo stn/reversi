@@ -3,17 +3,16 @@ package boardgame
 import boardgame.Marker._
 
 
-abstract class ListBoard[Repr <: Board[Repr]] (protected val list: List[Marker])
-    extends Board[Repr] {
+class ListBoard (
+  protected val list: List[Marker]
+) extends Board {
 
   def this() = this(List.fill(64) { Blank })
 
-  def apply(x: Int, y: Int): Marker = list(index(x, y))
+  override def apply(x: Int, y: Int): Marker = list(index(x, y))
 
-  def updated(x: Int, y: Int, m: Marker): Repr =
-    makeBoard(list.updated(index(x, y), m))
-
-  protected def makeBoard(list: List[Marker]): Repr
+  override def updated(x: Int, y: Int, m: Marker): ListBoard =
+    new ListBoard(list.updated(index(x, y), m))
 
 //  def isClear(x: Int, y: Int): Boolean = list(index(x, y)) == Blank
 
@@ -41,6 +40,8 @@ abstract class ListBoard[Repr <: Board[Repr]] (protected val list: List[Marker])
     } yield ay + l.mkString + ay + '\n'
     ax + b.mkString + ax
   }
+
+  def isFull: Boolean = list.forall { _ != Blank }
 
 }
 
