@@ -134,7 +134,9 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
+    println("digraph G {")
     val (m, s) = play(node, maxDepth)
+    println("}")
     m
   }
 
@@ -150,6 +152,7 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
     var maxS = -1000
     for (m <- moves) {
       val n = node.play(m).get
+      printEdge(node, n)
       val s = playOpponent(n, depth - 1)
       if (s > maxS) {
         nextMove = List((m, s))
@@ -172,12 +175,17 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
     var minS = 1000
     for (m <- moves) {
       val n = node.play(m).get
+      printEdge(node, n)
       val s = play(n, depth - 1)._2
       if (s < minS) {
         minS = s
       }
     }
     minS
+  }
+
+  def printEdge(n1: N, n2: N) {
+    println(n1.hashCode + "->" + n2.hashCode)
   }
   
   def score(node: N): Int
