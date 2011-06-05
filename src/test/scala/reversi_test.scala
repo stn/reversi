@@ -1,24 +1,18 @@
-package reversi
+package boardgame.reversi
 
 import org.scalatest.Spec
 import org.scalatest.matchers.ShouldMatchers
 
-import reversi._
+import boardgame._
+import boardgame.Marker._
 
 
 class ReversiSpec extends Spec with ShouldMatchers {
  
-  describe("A Board") {
-  
-    it("should be an empty board") {
-      val b = new Board()
-      for { x <- 0 until 8
-            y <- 0 until 8
-      } b(x, y) should be (Marker.Blank)
-    }
+  describe("A ReversiNode") {
 
     it("Start should be a start position") {
-      Board.Start.toString should be (
+      ReversiNode.Start.toString should be (
           """ abcdefgh 
             |1........1
             |2........2
@@ -33,8 +27,8 @@ class ReversiSpec extends Spec with ShouldMatchers {
     }
 
     it("reverse should reverse a board") {
-      val s = Board.Start
-      val b1 = s.play(2, 3, Marker.Dark).get
+      val s = ReversiNode.Start
+      val b1 = s.play(PutMarker(2, 3, Dark)).get
       b1.toString should be (
             """ abcdefgh 
               |1........1
@@ -47,7 +41,7 @@ class ReversiSpec extends Spec with ShouldMatchers {
               |8........8
               | abcdefgh 
               |""".stripMargin)
-      val b2 = b1.play(4, 2, Marker.Light).get
+      val b2 = b1.play(PutMarker(4, 2, Light)).get
       b2.toString should be (
             """ abcdefgh 
               |1........1
