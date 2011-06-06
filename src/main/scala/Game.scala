@@ -17,8 +17,7 @@ object Game {
       case "random" => new RandomPlayer[ReversiNode]
       case "greedy" => new GreedyPlayer[ReversiNode] with MarkersScore
       case "simple_heuristics" => new SimpleHeuristicsPlayer[ReversiNode]
-      case "depth2" => new Depth2Player[ReversiNode] with MarkersScore
-      case "minmax2" => new MinmaxPlayer[ReversiNode](2) with MarkersScore
+      case "minmax2" => new MinmaxPlayer[ReversiNode](2) with MarkersScore // with VisualizeTree[ReversiNode]
       case "minmax3" => new MinmaxPlayer[ReversiNode](3) with MarkersScore
       case "minmax4" => new MinmaxPlayer[ReversiNode](4) with MarkersScore
       case "negamax2" => new NegamaxPlayer[ReversiNode](2) with MarkersScore

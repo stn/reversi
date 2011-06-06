@@ -38,12 +38,12 @@ trait Player[N <: Node[N]] {
 
   def init(m: Marker) {
     marker = m
-    opponentMarker = flipColor(m)
+    opponentMarker = flipMarker(m)
   }
   
   def play(node: N, last: Move): Move
 
-  protected def flipColor(m: Marker): Marker =
+  protected def flipMarker(m: Marker): Marker =
     if (m == Dark) Light else Dark
 }
 
