@@ -10,9 +10,6 @@ import boardgame.Marker._
 class RandomPlayer[N <: Node[N]] extends Player[N] {
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
-    if (moves.isEmpty) {
-      return Pass
-    }
     moves(Random.nextInt(moves.length))
   }
 }
@@ -21,9 +18,6 @@ abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
-    if (moves.isEmpty) {
-      return Pass
-    }
     var nextMove = List[Move]()
     var maxS = -1000
     for (m <- moves) {
@@ -47,11 +41,8 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
-    if (moves.isEmpty) {
-      return Pass
-    }
     var nextMove = List[Move]()
-    var maxS = -1000
+    var maxS = Int.MinValue
     for (m <- moves) {
       (m: @unchecked) match {
         case PutMarker(x, y, _) =>
@@ -62,6 +53,8 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
           } else if (s == maxS) {
             nextMove = m :: nextMove
           }
+        case Pass =>
+          nextMove = List(Pass)
       }
     }
     nextMove(Random.nextInt(nextMove.length))
@@ -94,9 +87,6 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 
   override def play(node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
-    if (moves.isEmpty) {
-      return Pass
-    }
     var nextMove = List[Move]()
     var maxS = -1000
     for (m <- moves) {
@@ -114,9 +104,6 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 
   def playOpponent(node: N): Int = {
     val moves = node.possibleMoves(opponentMarker)
-    if (moves.isEmpty) {
-      return score(node)
-    }
     var minS = 1000
     for (m <- moves) {
       val n = node.play(m).get
@@ -133,6 +120,8 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 }
 
 trait VisualizeTree[N <: Node[N]] {
+  
+  var cutNode = 0
 
   def printHeader() {
     println("digraph G {")
@@ -154,9 +143,9 @@ trait VisualizeTree[N <: Node[N]] {
   }
   
   def printCutEdge(n1: N) {
-    val n2 = n1.play(Pass).get
-    println("%d->%d".format(n1.hashCode, n2.hashCode))
-    println("%d [label=\"/\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\"]".format(n2.hashCode))
+    println("%d->cut%d".format(n1.hashCode, cutNode))
+    println("cut%d [label=\"/\\n\\n\\n\\n\\n\\n\\n\\n\\n\"]".format(cutNode))
+    cutNode += 1
   }
 
 }
@@ -176,13 +165,6 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
       return (Pass, score(node))
     }
     val moves = node.possibleMoves(marker)
-    if (moves.isEmpty) {
-      val n = node.play(Pass).get
-      printEdge(node, n, Pass)
-      val s = playOpponent(n, depth - 1)
-      printNode(node, marker, s)
-      return (Pass, s)
-    }
     var nextMove = List[(Move, Int)]()
     var maxS = -1000
     for (m <- moves) {
@@ -206,13 +188,6 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
       return score(node)
     }
     val moves = node.possibleMoves(opponentMarker)
-    if (moves.isEmpty) {
-      val n = node.play(Pass).get
-      printEdge(node, n, Pass)
-      val s = playOpponent(n, depth - 1)
-      printNode(node, opponentMarker, s)
-      return s
-    }
     var minS = 1000
     for (m <- moves) {
       val n = node.play(m).get
@@ -242,9 +217,6 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
       return (Pass, score(node))
     }
     val moves = node.possibleMoves(color)
-    if (moves.isEmpty) {
-      return (Pass, score(node))
-    }
     var nextMove = List[(Move, Int)]()
     var maxS = -1000
     for (m <- moves) {
@@ -279,13 +251,6 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
       return (Pass, score(node))
     }
     val moves = node.possibleMoves(marker)
-    if (moves.isEmpty) {
-      val n = node.play(Pass).get
-      printEdge(node, n, Pass)
-      val s = playOpponent(n, alpha, beta, depth - 1)
-      printNode(node, marker, s)
-      return (Pass, s)
-    }
     var nextMove = List[(Move, Int)]()
     var maxS = Int.MinValue
     var a = alpha
@@ -317,13 +282,6 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
       return score(node)
     }
     val moves = node.possibleMoves(opponentMarker)
-    if (moves.isEmpty) {
-      val n = node.play(Pass).get
-      printEdge(node, n, Pass)
-      val s = playOpponent(n, alpha, beta, depth - 1)
-      printNode(node, opponentMarker, s)
-      return s
-    }
     var minS = 1000
     var b = beta
     breakable {

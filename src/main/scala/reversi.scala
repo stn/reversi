@@ -59,13 +59,17 @@ class ReversiNode (
     else (b, 0)
   }
 
-  def possibleMoves(m: Marker): Seq[Move] =
-    for { x <- 0 until 8
-          y <- 0 until 8
-          if (board(x, y) == Blank)
-          (b, n) = reverse(x, y, m)
-          if (n > 0)
-    } yield PutMarker(x, y, m)
+  def possibleMoves(m: Marker): Seq[Move] = {
+    val moves = 
+        for { x <- 0 until 8
+              y <- 0 until 8
+              if (board(x, y) == Blank)
+              (b, n) = reverse(x, y, m)
+              if (n > 0)
+        } yield PutMarker(x, y, m)
+    if (moves.isEmpty) List(Pass)
+    else moves
+  }
 
   def isTerminal: Boolean = terminal || board.isFull
 
