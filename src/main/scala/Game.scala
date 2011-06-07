@@ -21,6 +21,9 @@ object Game {
       case "minmax3" => new MinmaxPlayer[ReversiNode](3) with MarkersScore
       case "minmax4" => new MinmaxPlayer[ReversiNode](4) with MarkersScore
       case "negamax2" => new NegamaxPlayer[ReversiNode](2) with MarkersScore
+      case "alphabeta2" => new AlphaBetaPlayer[ReversiNode](2) with MarkersScore
+      case "alphabeta3" => new AlphaBetaPlayer[ReversiNode](3) with MarkersScore
+      case "alphabeta4" => new AlphaBetaPlayer[ReversiNode](4) with MarkersScore
     }
 
   def main(originalArgs: Array[String]) {

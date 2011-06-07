@@ -1,6 +1,7 @@
 package boardgame
 
 import scala.collection._
+import scala.util.control.Breaks._
 import scala.util.Random
 
 import boardgame.Marker._
@@ -152,6 +153,11 @@ trait VisualizeTree[N <: Node[N]] {
         "[fontcolor=\"#%s\", label=\"%d\\n%s\"]".format(color, score, n.toString.replaceAll("\n", "\\\\n")))
   }
   
+  def printCutEdge(n1: N) {
+    val n2 = n1.play(Pass).get
+    println("%d->%d".format(n1.hashCode, n2.hashCode))
+    println("%d [label=\"/\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\"]".format(n2.hashCode))
+  }
 
 }
 
@@ -254,6 +260,91 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
     nextMove(Random.nextInt(nextMove.length))
   }
   
+  def score(node: N): Int
+
+}
+
+abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  override def play(node: N, last: Move): Move = {
+    printHeader()
+    val (m, s) = play(node, Int.MinValue, Int.MaxValue, maxDepth)
+    printFooter()
+    m
+  }
+
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0) {
+      printNode(node, marker, score(node))
+      return (Pass, score(node))
+    }
+    val moves = node.possibleMoves(marker)
+    if (moves.isEmpty) {
+      val n = node.play(Pass).get
+      printEdge(node, n, Pass)
+      val s = playOpponent(n, alpha, beta, depth - 1)
+      printNode(node, marker, s)
+      return (Pass, s)
+    }
+    var nextMove = List[(Move, Int)]()
+    var maxS = Int.MinValue
+    var a = alpha
+    breakable {
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val s = playOpponent(n, a, beta, depth - 1)
+        if (s > maxS) {
+          nextMove = List((m, s))
+          maxS = s
+          a = a max s
+          if (maxS >= beta) {
+            printCutEdge(node)
+            break
+          }
+        } else if (s == maxS) {
+          nextMove = (m, s) :: nextMove
+        }
+      }
+    }
+    printNode(node, marker, maxS)
+    nextMove(Random.nextInt(nextMove.length))
+  }
+
+  def playOpponent(node: N, alpha: Int, beta: Int, depth: Int): Int = {
+    if (depth == 0) {
+      printNode(node, opponentMarker, score(node))
+      return score(node)
+    }
+    val moves = node.possibleMoves(opponentMarker)
+    if (moves.isEmpty) {
+      val n = node.play(Pass).get
+      printEdge(node, n, Pass)
+      val s = playOpponent(n, alpha, beta, depth - 1)
+      printNode(node, opponentMarker, s)
+      return s
+    }
+    var minS = 1000
+    var b = beta
+    breakable {
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val s = play(n, alpha, b, depth - 1)._2
+        if (s < minS) {
+          minS = s
+          b = b min s
+          if (minS <= alpha) {
+            printCutEdge(node)
+            break
+          }
+        }
+      }
+    }
+    printNode(node, opponentMarker, minS)
+    minS
+  }
+
   def score(node: N): Int
 
 }
