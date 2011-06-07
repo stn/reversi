@@ -69,7 +69,7 @@ object Game {
 
   def play(player1: Player[ReversiNode], player2: Player[ReversiNode]): Marker = {
     var node = ReversiNode.Start
-    var move: Move = StartMove
+    var move: Move = Move.empty
     player1.init(Dark)
     player2.init(Light)
 

@@ -18,8 +18,7 @@ class ReversiNode (
   def this(board: ListBoard, passed: Boolean) = this(board, passed, false)
 
   override def play(move: Move): Option[ReversiNode] =
-    move match {
-      case StartMove => Some(ReversiNode.Start)
+    (move: @unchecked) match {
       case Pass => Some(new ReversiNode(board, true, passed))
       case PutMarker(x, y, m) =>
         if (board(x, y) != Blank) return None

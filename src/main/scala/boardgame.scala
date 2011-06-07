@@ -8,7 +8,11 @@ object Marker extends Enumeration {
 import Marker._
 
 class Move
-case object StartMove extends Move
+
+object Move {
+  val empty: Move = new Move
+}
+
 case object Pass extends Move
 case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
   override def toString: String = {
