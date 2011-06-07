@@ -162,24 +162,22 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
   def play(node: N, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       printNode(node, marker, score(node))
-      return (Pass, score(node))
+      return (Move.empty, score(node))
     }
     val moves = node.possibleMoves(marker)
-    var nextMove = List[(Move, Int)]()
+    var nextMove = (Move.empty, Int.MinValue)
     var maxS = Int.MinValue
     for (m <- moves) {
       val n = node.play(m).get
       printEdge(node, n, m)
       val s = playOpponent(n, depth - 1)
       if (s > maxS) {
-        nextMove = List((m, s))
+        nextMove = (m, s)
         maxS = s
-      } else if (s == maxS) {
-        nextMove = (m, s) :: nextMove
       }
     }
     printNode(node, marker, maxS)
-    nextMove(Random.nextInt(nextMove.length))
+    nextMove
   }
 
   def playOpponent(node: N, depth: Int): Int = {
@@ -214,22 +212,20 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
 
   def play(node: N, color: Marker, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
-      return (Pass, score(node))
+      return (Move.empty, score(node))
     }
     val moves = node.possibleMoves(color)
-    var nextMove = List[(Move, Int)]()
+    var nextMove = (Move.empty, Int.MinValue)
     var maxS = Int.MinValue
     for (m <- moves) {
       val n = node.play(m).get
       val s = -play(n, flipMarker(color), depth - 1)._2
       if (s > maxS) {
-        nextMove = List((m, s))
+        nextMove = (m, s)
         maxS = s
-      } else if (s == maxS) {
-        nextMove = (m, s) :: nextMove
       }
     }
-    nextMove(Random.nextInt(nextMove.length))
+    nextMove
   }
   
   def score(node: N): Int
@@ -248,10 +244,10 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
   def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       printNode(node, marker, score(node))
-      return (Pass, score(node))
+      return (Move.empty, score(node))
     }
     val moves = node.possibleMoves(marker)
-    var nextMove = List[(Move, Int)]()
+    var nextMove = (Move.empty, Int.MinValue)
     var maxS = Int.MinValue
     var a = alpha
     breakable {
@@ -260,20 +256,18 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
         printEdge(node, n, m)
         val s = playOpponent(n, a, beta, depth - 1)
         if (s > maxS) {
-          nextMove = List((m, s))
+          nextMove = (m, s)
           maxS = s
           a = a max s
           if (maxS >= beta) {
             printCutEdge(node)
             break
           }
-        } else if (s == maxS) {
-          nextMove = (m, s) :: nextMove
         }
       }
     }
     printNode(node, marker, maxS)
-    nextMove(Random.nextInt(nextMove.length))
+    nextMove
   }
 
   def playOpponent(node: N, alpha: Int, beta: Int, depth: Int): Int = {
