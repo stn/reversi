@@ -363,3 +363,44 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
 
 }
 
+abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  override def play(node: N, last: Move): Move = {
+    printHeader()
+    val (m, s) = play(marker, node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    printFooter()
+    m
+  }
+
+  def play(mk: Marker, node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      printNode(node, mk, score(node))
+      return (Move.empty, score(node))
+    }
+    val fmk = flipMarker(mk)
+    val moves = node.possibleMoves(mk)
+    var nextMove = Move.empty
+    var alpha_ = alpha
+    breakable {
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val (_, s) = play(fmk, n, -beta, -alpha_, depth - 1)
+        if (-s > alpha_) {
+          nextMove = m
+          alpha_ = -s
+          if (alpha_ >= beta) {
+            printCutEdge(node)
+            break
+          }
+        }
+      }
+    }
+    printNode(node, mk, alpha_)
+    (nextMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+
