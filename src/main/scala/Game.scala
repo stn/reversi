@@ -9,9 +9,6 @@ import boardgame.Marker._
 
 object Game {
 
-  var numOfGames = 0
-  var verbose = false
-
   def loadPlayer(name: String): Player[ReversiNode] =
     (name: @unchecked) match {
       case "random" => new RandomPlayer[ReversiNode]
@@ -42,17 +39,16 @@ object Game {
     val player2 = loadPlayer(args(1))
     player2.name = args(1)
 
-    if (numOfGames == 0) {
-      verbose = true
+    if (Flags.numOfGames == 0) {
       println(play(player1, player2))
     } else {
-      val scoreMap1 = playN(numOfGames, player1, player2)
+      val scoreMap1 = playN(Flags.numOfGames, player1, player2)
       printf("%s D: %d, %s L: %d, -: %d\n",
           player1.name, scoreMap1(Marker.Dark),
           player2.name, scoreMap1(Marker.Light),
           scoreMap1(Marker.Blank))
 
-      val scoreMap2 = playN(numOfGames, player2, player1)
+      val scoreMap2 = playN(Flags.numOfGames, player2, player1)
       printf("%s D: %d, %s L: %d, -: %d\n",
           player2.name, scoreMap2(Marker.Dark),
           player1.name, scoreMap2(Marker.Light),
@@ -62,10 +58,15 @@ object Game {
 
   def parseOptions(args: List[String]): List[String] =
     args match {
-        case "-n" :: times :: rest =>
-          numOfGames = times.toInt
+        case "-v" :: rest =>
+          Flags.verbose = true
           parseOptions(rest)
-
+        case "-n" :: times :: rest =>
+          Flags.numOfGames = times.toInt
+          parseOptions(rest)
+        case "-t" :: rest =>
+          Flags.printTree = true
+          parseOptions(rest)
         case _ =>
           args
       }
@@ -80,28 +81,28 @@ object Game {
     while (true) {
       // player1
       move = player1.play(node, move)
-      if (verbose)
+      if (Flags.verbose)
         printf("%d: %s\n", ply, move)
       ply += 1
       node.play(move) match {
         case Some(d) => node = d
         case None => return Light // illegal move of Dark
       }
-      if (verbose)
+      if (Flags.verbose)
         println(node)
       if (node.isTerminal) {
         return node.winner
       }
       // player2
       move = player2.play(node, move)
-      if (verbose)
+      if (Flags.verbose)
         printf("%d: %s\n", ply, move)
       ply += 1
       node.play(move) match {
         case Some(d) => node = d
         case None => return Dark // illegal move of Light
       }
-      if (verbose)
+      if (Flags.verbose)
         println(node)
       if (node.isTerminal) {
         return node.winner

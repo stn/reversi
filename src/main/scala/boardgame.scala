@@ -51,3 +51,9 @@ trait Player[N <: Node[N]] {
     if (m == Dark) Light else Dark
 }
 
+object Flags {
+  var numOfGames: Int = 0
+  var verbose: Boolean = false
+  var printTree: Boolean = false
+}
+

@@ -124,28 +124,38 @@ trait VisualizeTree[N <: Node[N]] {
   var cutNode = 0
 
   def printHeader() {
-    println("digraph G {")
-    println("node [shape=plaintext, fontname=Courier]")
+    if (Flags.printTree) {
+      println("digraph G {")
+      println("node [shape=plaintext, fontname=Courier]")
+    }
   }
 
   def printFooter() {
-    println("}")
+    if (Flags.printTree) {
+      println("}")
+    }
   }
   
   def printEdge(n1: N, n2: N, m: Move) {
-    println("%d->%d [label=\"%s\"]".format(n1.hashCode, n2.hashCode, m.toString))
+    if (Flags.printTree) {
+      println("%d->%d [label=\"%s\"]".format(n1.hashCode, n2.hashCode, m.toString))
+    }
   }
 
   def printNode(n: N, mk: Marker, score: Int) {
-    val color = if (mk == Dark) "0000cd" else "ff0000"
-    println(n.hashCode +
-        "[fontcolor=\"#%s\", label=\"%d\\n%s\"]".format(color, score, n.toString.replaceAll("\n", "\\\\n")))
+    if (Flags.printTree) {
+      val color = if (mk == Dark) "0000cd" else "ff0000"
+      println(n.hashCode +
+          "[fontcolor=\"#%s\", label=\"%d\\n%s\"]".format(color, score, n.toString.replaceAll("\n", "\\\\n")))
+    }
   }
   
   def printCutEdge(n1: N) {
-    println("%d->cut%d".format(n1.hashCode, cutNode))
-    println("cut%d [label=\"/\\n\\n\\n\\n\\n\\n\\n\\n\\n\"]".format(cutNode))
-    cutNode += 1
+    if (Flags.printTree) {
+      println("%d->cut%d".format(n1.hashCode, cutNode))
+      println("cut%d [label=\"/\\n\\n\\n\\n\\n\\n\\n\\n\\n\"]".format(cutNode))
+      cutNode += 1
+    }
   }
 
 }
