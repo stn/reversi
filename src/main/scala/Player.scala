@@ -165,19 +165,19 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
       return (Move.empty, score(node))
     }
     val moves = node.possibleMoves(marker)
-    var nextMove = (Move.empty, Int.MinValue)
+    var nextMove = Move.empty
     var maxS = Int.MinValue
     for (m <- moves) {
       val n = node.play(m).get
       printEdge(node, n, m)
       val s = playOpponent(n, depth - 1)
       if (s > maxS) {
-        nextMove = (m, s)
+        nextMove = m
         maxS = s
       }
     }
     printNode(node, marker, maxS)
-    nextMove
+    (nextMove, maxS)
   }
 
   def playOpponent(node: N, depth: Int): Int = {
@@ -215,22 +215,88 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
       return (Move.empty, score(node))
     }
     val moves = node.possibleMoves(color)
-    var nextMove = (Move.empty, Int.MinValue)
+    var nextMove = Move.empty
     var maxS = Int.MinValue
     for (m <- moves) {
       val n = node.play(m).get
       val s = -play(n, flipMarker(color), depth - 1)._2
       if (s > maxS) {
-        nextMove = (m, s)
+        nextMove = m
         maxS = s
       }
     }
-    nextMove
+    (nextMove, maxS)
   }
   
   def score(node: N): Int
 
 }
+
+abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  override def play(node: N, last: Move): Move = {
+    printHeader()
+    val (m, s) = play(node, Int.MaxValue, maxDepth)
+    printFooter()
+    m
+  }
+
+  def play(node: N, bound: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      printNode(node, marker, score(node))
+      return (Move.empty, score(node))
+    }
+    val moves = node.possibleMoves(marker)
+    var nextMove = Move.empty
+    var maxS = Int.MinValue
+    breakable {
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val s = playOpponent(n, maxS, depth - 1)
+        if (s > maxS) {
+          nextMove = m
+          maxS = s
+        }
+        if (s >= bound) {
+          printCutEdge(node)
+          break
+        }
+      }
+    }
+    printNode(node, marker, maxS)
+    (nextMove, maxS)
+  }
+
+  def playOpponent(node: N, bound: Int, depth: Int): Int = {
+    if (depth == 0 || node.isTerminal) {
+      printNode(node, opponentMarker, score(node))
+      return score(node)
+    }
+    val moves = node.possibleMoves(opponentMarker)
+    var minS = Int.MaxValue
+    breakable {
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val s = play(n, minS, depth - 1)._2
+        if (s < minS) {
+          minS = s
+        }
+        if (s <= bound) {
+          printCutEdge(node)
+          break
+        }
+      }
+    }
+    printNode(node, opponentMarker, minS)
+    minS
+  }
+
+  def score(node: N): Int
+
+}
+
 
 abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
@@ -247,27 +313,25 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
       return (Move.empty, score(node))
     }
     val moves = node.possibleMoves(marker)
-    var nextMove = (Move.empty, Int.MinValue)
-    var maxS = Int.MinValue
-    var a = alpha
+    var nextMove = Move.empty
+    var alpha_ = alpha
     breakable {
       for (m <- moves) {
         val n = node.play(m).get
         printEdge(node, n, m)
-        val s = playOpponent(n, a, beta, depth - 1)
-        if (s > maxS) {
-          nextMove = (m, s)
-          maxS = s
-          a = a max s
-          if (maxS >= beta) {
+        val s = playOpponent(n, alpha_, beta, depth - 1)
+        if (s > alpha_) {
+          nextMove = m
+          alpha_ = s
+          if (alpha_ >= beta) {
             printCutEdge(node)
             break
           }
         }
       }
     }
-    printNode(node, marker, maxS)
-    nextMove
+    printNode(node, marker, alpha_)
+    (nextMove, alpha_)
   }
 
   def playOpponent(node: N, alpha: Int, beta: Int, depth: Int): Int = {
@@ -276,25 +340,23 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
       return score(node)
     }
     val moves = node.possibleMoves(opponentMarker)
-    var minS = Int.MaxValue
-    var b = beta
+    var beta_ = beta
     breakable {
       for (m <- moves) {
         val n = node.play(m).get
         printEdge(node, n, m)
-        val s = play(n, alpha, b, depth - 1)._2
-        if (s < minS) {
-          minS = s
-          b = b min s
-          if (minS <= alpha) {
+        val s = play(n, alpha, beta_, depth - 1)._2
+        if (s < beta_) {
+          beta_ = s
+          if (beta_ <= alpha) {
             printCutEdge(node)
             break
           }
         }
       }
     }
-    printNode(node, opponentMarker, minS)
-    minS
+    printNode(node, opponentMarker, beta_)
+    beta_
   }
 
   def score(node: N): Int
