@@ -30,11 +30,26 @@ object Game {
       case "negaalpha4" => new NegaAlphaBetaPlayer[ReversiNode](4) with MarkersScore
       case "negaalpha5" => new NegaAlphaBetaPlayer[ReversiNode](5) with MarkersScore
       case "negaalpha6" => new NegaAlphaBetaPlayer[ReversiNode](6) with MarkersScore
-      case "killermove2" => new KillerMovePlayer[ReversiNode](2) with MarkersScore
-      case "killermove3" => new KillerMovePlayer[ReversiNode](3) with MarkersScore
-      case "killermove4" => new KillerMovePlayer[ReversiNode](4) with MarkersScore
-      case "killermove5" => new KillerMovePlayer[ReversiNode](5) with MarkersScore
-      case "killermove6" => new KillerMovePlayer[ReversiNode](6) with MarkersScore
+      case "killermove2" => new KillerMovePlayer[ReversiNode](2, 1) with MarkersScore
+      case "killermove3" => new KillerMovePlayer[ReversiNode](3, 1) with MarkersScore
+      case "killermove4" => new KillerMovePlayer[ReversiNode](4, 1) with MarkersScore
+      case "killermove5" => new KillerMovePlayer[ReversiNode](5, 1) with MarkersScore
+      case "killermove6" => new KillerMovePlayer[ReversiNode](6, 1) with MarkersScore
+      case "killermove2_2" => new KillerMovePlayer[ReversiNode](2, 2) with MarkersScore
+      case "killermove3_2" => new KillerMovePlayer[ReversiNode](3, 2) with MarkersScore
+      case "killermove4_2" => new KillerMovePlayer[ReversiNode](4, 2) with MarkersScore
+      case "killermove5_2" => new KillerMovePlayer[ReversiNode](5, 2) with MarkersScore
+      case "killermove6_2" => new KillerMovePlayer[ReversiNode](6, 2) with MarkersScore
+      case "killermove2_4" => new KillerMovePlayer[ReversiNode](2, 4) with MarkersScore
+      case "killermove3_4" => new KillerMovePlayer[ReversiNode](3, 4) with MarkersScore
+      case "killermove4_4" => new KillerMovePlayer[ReversiNode](4, 4) with MarkersScore
+      case "killermove5_4" => new KillerMovePlayer[ReversiNode](5, 4) with MarkersScore
+      case "killermove6_4" => new KillerMovePlayer[ReversiNode](6, 4) with MarkersScore
+      case "killermove2_8" => new KillerMovePlayer[ReversiNode](2, 8) with MarkersScore
+      case "killermove3_8" => new KillerMovePlayer[ReversiNode](3, 8) with MarkersScore
+      case "killermove4_8" => new KillerMovePlayer[ReversiNode](4, 8) with MarkersScore
+      case "killermove5_8" => new KillerMovePlayer[ReversiNode](5, 8) with MarkersScore
+      case "killermove6_8" => new KillerMovePlayer[ReversiNode](6, 8) with MarkersScore
     }
 
   def main(originalArgs: Array[String]) {
