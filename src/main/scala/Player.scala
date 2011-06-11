@@ -433,3 +433,58 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
 
 }
 
+abstract class KillerMovePlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  var killerMove: Move = Pass
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    killerMove = Pass
+    printHeader()
+    initCount()
+    val startTime = Platform.currentTime
+    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime
+    printCount("KillerMove", maxDepth, ply, stopTime - startTime)
+    printFooter()
+    m
+  }
+
+  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode()
+      printNode(node, mk, score(node))
+      return (Move.empty, score(node))
+    }
+    countINode()
+    val fmk = flipMarker(mk)
+    var moves = node.possibleMoves(mk).toList
+    var nextMove = Move.empty
+    var alpha_ = alpha
+    breakable {
+      if (moves contains killerMove) {
+        //Log.d("KillerMove", killerMove.toString)
+        moves = killerMove :: (moves filterNot (_ == killerMove))
+      }
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        if (-s > alpha_) {
+          nextMove = m
+          alpha_ = -s
+          if (alpha_ >= beta) {
+            killerMove = m
+            printCutEdge(node)
+            break
+          }
+        }
+      }
+    }
+    printNode(node, mk, alpha_)
+    (nextMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+

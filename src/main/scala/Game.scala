@@ -30,6 +30,11 @@ object Game {
       case "negaalpha4" => new NegaAlphaBetaPlayer[ReversiNode](4) with MarkersScore
       case "negaalpha5" => new NegaAlphaBetaPlayer[ReversiNode](5) with MarkersScore
       case "negaalpha6" => new NegaAlphaBetaPlayer[ReversiNode](6) with MarkersScore
+      case "killermove2" => new KillerMovePlayer[ReversiNode](2) with MarkersScore
+      case "killermove3" => new KillerMovePlayer[ReversiNode](3) with MarkersScore
+      case "killermove4" => new KillerMovePlayer[ReversiNode](4) with MarkersScore
+      case "killermove5" => new KillerMovePlayer[ReversiNode](5) with MarkersScore
+      case "killermove6" => new KillerMovePlayer[ReversiNode](6) with MarkersScore
     }
 
   def main(originalArgs: Array[String]) {
