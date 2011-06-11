@@ -1,6 +1,7 @@
 package boardgame
 
 import scala.collection._
+import scala.compat.Platform
 import scala.util.control.Breaks._
 import scala.util.Random
 
@@ -8,7 +9,7 @@ import boardgame.Marker._
 
 
 class RandomPlayer[N <: Node[N]] extends Player[N] {
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
     moves(Random.nextInt(moves.length))
   }
@@ -16,7 +17,7 @@ class RandomPlayer[N <: Node[N]] extends Player[N] {
 
 abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
     var nextMove = List[Move]()
     var maxS = Int.MinValue
@@ -39,7 +40,7 @@ abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
 
 class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
     var nextMove = List[Move]()
     var maxS = Int.MinValue
@@ -85,7 +86,7 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
 
 abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     val moves = node.possibleMoves(marker)
     var nextMove = List[Move]()
     var maxS = Int.MinValue
@@ -160,9 +161,10 @@ trait VisualizeTree[N <: Node[N]] {
 
 }
 
+
 abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     printHeader()
     val (m, s) = play(node, maxDepth)
     printFooter()
@@ -213,28 +215,39 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
 
 }
 
-abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] {
+abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
+    printHeader()
+    initCount()
+    val startTime = Platform.currentTime
     val (m, s) = play(node, marker, maxDepth)
+    val stopTime = Platform.currentTime
+    printCount("MinMax", maxDepth, ply, stopTime - startTime)
+    printFooter()
     m
   }
 
-  def play(node: N, color: Marker, depth: Int): (Move, Int) = {
+  def play(node: N, mk: Marker, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
+      countTNode()
+      printNode(node, mk, score(node))
       return (Move.empty, score(node))
     }
-    val moves = node.possibleMoves(color)
+    countINode()
+    val moves = node.possibleMoves(mk)
     var nextMove = Move.empty
     var maxS = Int.MinValue
     for (m <- moves) {
       val n = node.play(m).get
-      val s = -play(n, flipMarker(color), depth - 1)._2
+      printEdge(node, n, m)
+      val s = -play(n, flipMarker(mk), depth - 1)._2
       if (s > maxS) {
         nextMove = m
         maxS = s
       }
     }
+    printNode(node, mk, maxS)
     (nextMove, maxS)
   }
   
@@ -244,7 +257,7 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
 
 abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     printHeader()
     val (m, s) = play(node, Int.MaxValue, maxDepth)
     printFooter()
@@ -310,7 +323,7 @@ abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Pla
 
 abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     printHeader()
     val (m, s) = play(node, Int.MinValue, Int.MaxValue, maxDepth)
     printFooter()
@@ -375,18 +388,24 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
 
 abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
-  override def play(node: N, last: Move): Move = {
+  override def play(ply: Int, node: N, last: Move): Move = {
     printHeader()
-    val (m, s) = play(marker, node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    initCount()
+    val startTime = Platform.currentTime
+    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime
+    printCount("AlphaBeta", maxDepth, ply, stopTime - startTime)
     printFooter()
     m
   }
 
-  def play(mk: Marker, node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
+      countTNode()
       printNode(node, mk, score(node))
       return (Move.empty, score(node))
     }
+    countINode()
     val fmk = flipMarker(mk)
     val moves = node.possibleMoves(mk)
     var nextMove = Move.empty
@@ -395,7 +414,7 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
       for (m <- moves) {
         val n = node.play(m).get
         printEdge(node, n, m)
-        val (_, s) = play(fmk, n, -beta, -alpha_, depth - 1)
+        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
         if (-s > alpha_) {
           nextMove = m
           alpha_ = -s

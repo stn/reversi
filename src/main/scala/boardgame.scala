@@ -35,7 +35,7 @@ trait Board {
   def numOfMarkers: Map[Marker, Int]
 }
 
-trait Player[N <: Node[N]] {
+trait Player[N <: Node[N]] extends NodeCount {
   var marker: Marker = _
   var opponentMarker: Marker = _
   var name: String = ""
@@ -45,15 +45,9 @@ trait Player[N <: Node[N]] {
     opponentMarker = flipMarker(m)
   }
   
-  def play(node: N, last: Move): Move
+  def play(ply: Int, node: N, last: Move): Move
 
   protected def flipMarker(m: Marker): Marker =
     if (m == Dark) Light else Dark
-}
-
-object Flags {
-  var numOfGames: Int = 0
-  var verbose: Boolean = false
-  var printTree: Boolean = false
 }
 

@@ -18,12 +18,18 @@ object Game {
       case "minmax3" => new MinmaxPlayer[ReversiNode](3) with MarkersScore
       case "minmax4" => new MinmaxPlayer[ReversiNode](4) with MarkersScore
       case "negamax2" => new NegamaxPlayer[ReversiNode](2) with MarkersScore
+      case "negamax3" => new NegamaxPlayer[ReversiNode](3) with MarkersScore
+      case "negamax4" => new NegamaxPlayer[ReversiNode](4) with MarkersScore
+      case "negamax5" => new NegamaxPlayer[ReversiNode](5) with MarkersScore
+      case "negamax6" => new NegamaxPlayer[ReversiNode](6) with MarkersScore
       case "bab2" => new BranchAndBoundPlayer[ReversiNode](2) with MarkersScore
       case "bab3" => new BranchAndBoundPlayer[ReversiNode](3) with MarkersScore
       case "bab4" => new BranchAndBoundPlayer[ReversiNode](4) with MarkersScore
-      case "alphabeta2" => new AlphaBetaPlayer[ReversiNode](2) with MarkersScore
-      case "alphabeta3" => new AlphaBetaPlayer[ReversiNode](3) with MarkersScore
-      case "alphabeta4" => new AlphaBetaPlayer[ReversiNode](4) with MarkersScore
+      case "negaalpha2" => new NegaAlphaBetaPlayer[ReversiNode](2) with MarkersScore
+      case "negaalpha3" => new NegaAlphaBetaPlayer[ReversiNode](3) with MarkersScore
+      case "negaalpha4" => new NegaAlphaBetaPlayer[ReversiNode](4) with MarkersScore
+      case "negaalpha5" => new NegaAlphaBetaPlayer[ReversiNode](5) with MarkersScore
+      case "negaalpha6" => new NegaAlphaBetaPlayer[ReversiNode](6) with MarkersScore
     }
 
   def main(originalArgs: Array[String]) {
@@ -59,7 +65,9 @@ object Game {
   def parseOptions(args: List[String]): List[String] =
     args match {
         case "-v" :: rest =>
-          Flags.verbose = true
+          Flags.logInfo = true
+          Flags.logDebug = true
+          Flags.logWarning = true
           parseOptions(rest)
         case "-n" :: times :: rest =>
           Flags.numOfGames = times.toInt
@@ -80,35 +88,28 @@ object Game {
     var ply = 1
     while (true) {
       // player1
-      move = player1.play(node, move)
-      if (Flags.verbose)
-        printf("%d: %s\n", ply, move)
+      move = player1.play(ply, node, move)
       ply += 1
       node.play(move) match {
         case Some(d) => node = d
         case None => return Light // illegal move of Dark
       }
-      if (Flags.verbose)
-        println(node)
       if (node.isTerminal) {
         return node.winner
       }
       // player2
-      move = player2.play(node, move)
-      if (Flags.verbose)
-        printf("%d: %s\n", ply, move)
+      player2.initCount()
+      move = player2.play(ply, node, move)
       ply += 1
       node.play(move) match {
         case Some(d) => node = d
         case None => return Dark // illegal move of Light
       }
-      if (Flags.verbose)
-        println(node)
       if (node.isTerminal) {
         return node.winner
       }
     }
-    Blank // Just compiler happy
+    Blank // Just make compiler happy
   }
 
   def playN(n: Int, player1: Player[ReversiNode], player2: Player[ReversiNode]): Map[Marker, Int] = {
