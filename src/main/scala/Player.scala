@@ -435,16 +435,17 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
 
 abstract class KillerMovePlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
 
-  var killerMove: List[Move] = _
+  var killerMoves: Array[List[Move]] = _
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    killerMove = List.empty
+    killerMoves = Array.fill(maxDepth) { List.empty }
     printHeader()
     initCount()
     val startTime = Platform.currentTime
     val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime
-    printCount("KillerMove", maxDepth, ply, stopTime - startTime)
+    printCount("KillerMove", numKillerMoves, ply, stopTime - startTime)
+    Log.i("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter()
     m
   }
@@ -461,7 +462,8 @@ abstract class KillerMovePlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves:
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
-      var is = killerMove intersect moves
+      val km = killerMoves(depth - 1)
+      var is = km intersect moves
       if (!is.isEmpty) {
         moves = is ++ (moves diff is)
       }
@@ -473,10 +475,10 @@ abstract class KillerMovePlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves:
           nextMove = m
           alpha_ = -s
           if (alpha_ >= beta) {
-            if (killerMove contains m) {
-              killerMove = m :: (killerMove filterNot (_ == m))
+            if (km contains m) {
+              killerMoves(depth - 1) = m :: (km filterNot (_ == m))
             } else {
-              killerMove = (m :: killerMove) take numKillerMoves
+              killerMoves(depth - 1) = (m :: km) take numKillerMoves
             }
             printCutEdge(node)
             break
