@@ -433,7 +433,7 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
 
 }
 
-abstract class KillerMovePlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
+abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
 
   var killerMoves: Array[List[Move]] = _
 
@@ -487,6 +487,59 @@ abstract class KillerMovePlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves:
       }
     }
     printNode(node, mk, alpha_)
+    (nextMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+
+abstract class HistoryNewPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: Int) extends Player[N] {
+
+  var histories: List[Move] = _
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    histories = List.empty
+    initCount()
+    val startTime = Platform.currentTime
+    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime
+    printCount("historyNew", numHistories, ply, stopTime - startTime)
+    m
+  }
+
+  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode()
+      return (Move.empty, score(node))
+    }
+    countINode()
+    val fmk = flipMarker(mk)
+    var moves = node.possibleMoves(mk).toList
+    var nextMove = Move.empty
+    var alpha_ = alpha
+    breakable {
+      var is = histories intersect moves
+      if (!is.isEmpty) {
+        moves = is ++ (moves diff is)
+      }
+      for (m <- moves) {
+        val n = node.play(m).get
+        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        if (-s > alpha_) {
+          nextMove = m
+          alpha_ = -s
+          if (alpha_ >= beta) {
+            break
+          }
+        }
+      }
+    }
+    if (histories contains nextMove) {
+      histories = nextMove :: (histories filterNot (_ == nextMove))
+    } else {
+      histories = (nextMove :: histories) take numHistories
+    }
     (nextMove, alpha_)
   }
 
