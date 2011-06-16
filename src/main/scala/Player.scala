@@ -10,7 +10,7 @@ import boardgame.Marker._
 
 class RandomPlayer[N <: Node[N]] extends Player[N] {
   override def play(ply: Int, node: N, last: Move): Move = {
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     moves(Random.nextInt(moves.length))
   }
 }
@@ -18,7 +18,7 @@ class RandomPlayer[N <: Node[N]] extends Player[N] {
 abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     var nextMove = List[Move]()
     var maxS = Int.MinValue
     for (m <- moves) {
@@ -41,7 +41,7 @@ abstract class GreedyPlayer[N <: Node[N]] extends Player[N] {
 class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     var nextMove = List[Move]()
     var maxS = Int.MinValue
     for (m <- moves) {
@@ -87,7 +87,7 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
 abstract class Depth2Player[N <: Node[N]] extends Player[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     var nextMove = List[Move]()
     var maxS = Int.MinValue
     for (m <- moves) {
@@ -104,7 +104,7 @@ abstract class Depth2Player[N <: Node[N]] extends Player[N] {
   }
 
   def playOpponent(node: N): Int = {
-    val moves = node.possibleMoves(opponentMarker)
+    val moves = node.possibleMoves()
     var minS = Int.MaxValue
     for (m <- moves) {
       val n = node.play(m).get
@@ -143,9 +143,9 @@ trait VisualizeTree[N <: Node[N]] {
     }
   }
 
-  def printNode(n: N, mk: Marker, score: Int) {
+  def printNode(n: N, score: Int) {
     if (Flags.printTree) {
-      val color = if (mk == Dark) "0000cd" else "ff0000"
+      val color = if (n.marker == Dark) "0000cd" else "ff0000"
       println(n.hashCode +
           "[fontcolor=\"#%s\", label=\"%d\\n%s\"]".format(color, score, n.toString.replaceAll("\n", "\\\\n")))
     }
@@ -173,10 +173,10 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
 
   def play(node: N, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
-      printNode(node, marker, score(node))
+      printNode(node, score(node))
       return (Move.empty, score(node))
     }
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     var nextMove = Move.empty
     var maxS = Int.MinValue
     for (m <- moves) {
@@ -188,16 +188,16 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
         maxS = s
       }
     }
-    printNode(node, marker, maxS)
+    printNode(node, maxS)
     (nextMove, maxS)
   }
 
   def playOpponent(node: N, depth: Int): Int = {
     if (depth == 0 || node.isTerminal) {
-      printNode(node, opponentMarker, score(node))
+      printNode(node, score(node))
       return score(node)
     }
-    val moves = node.possibleMoves(opponentMarker)
+    val moves = node.possibleMoves()
     var minS = Int.MaxValue
     for (m <- moves) {
       val n = node.play(m).get
@@ -207,7 +207,7 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
         minS = s
       }
     }
-    printNode(node, opponentMarker, minS)
+    printNode(node, minS)
     minS
   }
 
@@ -221,33 +221,33 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
     printHeader()
     initCount()
     val startTime = Platform.currentTime
-    val (m, s) = play(node, marker, maxDepth)
+    val (m, s) = play(node, maxDepth)
     val stopTime = Platform.currentTime
     printCount("MinMax", maxDepth, ply, stopTime - startTime)
     printFooter()
     m
   }
 
-  def play(node: N, mk: Marker, depth: Int): (Move, Int) = {
+  def play(node: N, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       countTNode()
-      printNode(node, mk, score(node))
+      printNode(node, score(node))
       return (Move.empty, score(node))
     }
     countINode()
-    val moves = node.possibleMoves(mk)
+    val moves = node.possibleMoves()
     var nextMove = Move.empty
     var maxS = Int.MinValue
     for (m <- moves) {
       val n = node.play(m).get
       printEdge(node, n, m)
-      val s = -play(n, flipMarker(mk), depth - 1)._2
+      val s = -play(n, depth - 1)._2
       if (s > maxS) {
         nextMove = m
         maxS = s
       }
     }
-    printNode(node, mk, maxS)
+    printNode(node, maxS)
     (nextMove, maxS)
   }
   
@@ -266,10 +266,10 @@ abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Pla
 
   def play(node: N, bound: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
-      printNode(node, marker, score(node))
+      printNode(node, score(node))
       return (Move.empty, score(node))
     }
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     var nextMove = Move.empty
     var maxS = Int.MinValue
     breakable {
@@ -287,16 +287,16 @@ abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Pla
         }
       }
     }
-    printNode(node, marker, maxS)
+    printNode(node, maxS)
     (nextMove, maxS)
   }
 
   def playOpponent(node: N, bound: Int, depth: Int): Int = {
     if (depth == 0 || node.isTerminal) {
-      printNode(node, opponentMarker, score(node))
+      printNode(node, score(node))
       return score(node)
     }
-    val moves = node.possibleMoves(opponentMarker)
+    val moves = node.possibleMoves()
     var minS = Int.MaxValue
     breakable {
       for (m <- moves) {
@@ -312,7 +312,7 @@ abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Pla
         }
       }
     }
-    printNode(node, opponentMarker, minS)
+    printNode(node, minS)
     minS
   }
 
@@ -332,10 +332,10 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
 
   def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
-      printNode(node, marker, score(node))
+      printNode(node, score(node))
       return (Move.empty, score(node))
     }
-    val moves = node.possibleMoves(marker)
+    val moves = node.possibleMoves()
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
@@ -353,16 +353,16 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
         }
       }
     }
-    printNode(node, marker, alpha_)
+    printNode(node, alpha_)
     (nextMove, alpha_)
   }
 
   def playOpponent(node: N, alpha: Int, beta: Int, depth: Int): Int = {
     if (depth == 0 || node.isTerminal) {
-      printNode(node, opponentMarker, score(node))
+      printNode(node, score(node))
       return score(node)
     }
-    val moves = node.possibleMoves(opponentMarker)
+    val moves = node.possibleMoves()
     var beta_ = beta
     breakable {
       for (m <- moves) {
@@ -378,7 +378,7 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
         }
       }
     }
-    printNode(node, opponentMarker, beta_)
+    printNode(node, beta_)
     beta_
   }
 
@@ -392,29 +392,28 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
     printHeader()
     initCount()
     val startTime = Platform.currentTime
-    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime
     printCount("AlphaBeta", maxDepth, ply, stopTime - startTime)
     printFooter()
     m
   }
 
-  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       countTNode()
-      printNode(node, mk, score(node))
+      printNode(node, score(node))
       return (Move.empty, score(node))
     }
     countINode()
-    val fmk = flipMarker(mk)
-    val moves = node.possibleMoves(mk)
+    val moves = node.possibleMoves()
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
       for (m <- moves) {
         val n = node.play(m).get
         printEdge(node, n, m)
-        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        val (_, s) = play(n, -beta, -alpha_, depth - 1)
         if (-s > alpha_) {
           nextMove = m
           alpha_ = -s
@@ -425,7 +424,7 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
         }
       }
     }
-    printNode(node, mk, alpha_)
+    printNode(node, alpha_)
     (nextMove, alpha_)
   }
 
@@ -442,7 +441,7 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, numKillerM
     printHeader()
     initCount()
     val startTime = Platform.currentTime
-    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime
     printCount("KillerMove", numKillerMoves, ply, stopTime - startTime)
     Log.i("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
@@ -450,15 +449,14 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, numKillerM
     m
   }
 
-  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       countTNode()
-      printNode(node, mk, score(node))
+      printNode(node, score(node))
       return (Move.empty, score(node))
     }
     countINode()
-    val fmk = flipMarker(mk)
-    var moves = node.possibleMoves(mk).toList
+    var moves = node.possibleMoves().toList
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
@@ -470,7 +468,7 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, numKillerM
       for (m <- moves) {
         val n = node.play(m).get
         printEdge(node, n, m)
-        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        val (_, s) = play(n, -beta, -alpha_, depth - 1)
         if (-s > alpha_) {
           nextMove = m
           alpha_ = -s
@@ -486,7 +484,7 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, numKillerM
         }
       }
     }
-    printNode(node, mk, alpha_)
+    printNode(node, alpha_)
     (nextMove, alpha_)
   }
 
@@ -502,20 +500,19 @@ abstract class HistoryNewPlayer[N <: Node[N]](val maxDepth: Int, val numHistorie
     histories = List.empty
     initCount()
     val startTime = Platform.currentTime
-    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime
     printCount("historyNew", numHistories, ply, stopTime - startTime)
     m
   }
 
-  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       countTNode()
       return (Move.empty, score(node))
     }
     countINode()
-    val fmk = flipMarker(mk)
-    var moves = node.possibleMoves(mk).toList
+    var moves = node.possibleMoves().toList
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
@@ -525,7 +522,7 @@ abstract class HistoryNewPlayer[N <: Node[N]](val maxDepth: Int, val numHistorie
       }
       for (m <- moves) {
         val n = node.play(m).get
-        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        val (_, s) = play(n, -beta, -alpha_, depth - 1)
         if (-s > alpha_) {
           nextMove = m
           alpha_ = -s
@@ -555,20 +552,19 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: 
     histories = mutable.Map.empty
     initCount()
     val startTime = Platform.currentTime
-    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime
     printCount("history", numHistories, ply, stopTime - startTime)
     m
   }
 
-  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       countTNode()
       return (Move.empty, score(node))
     }
     countINode()
-    val fmk = flipMarker(mk)
-    var moves = node.possibleMoves(mk).toList
+    var moves = node.possibleMoves().toList
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
@@ -579,7 +575,7 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: 
       }
       for (m <- moves) {
         val n = node.play(m).get
-        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        val (_, s) = play(n, -beta, -alpha_, depth - 1)
         if (-s > alpha_) {
           nextMove = m
           alpha_ = -s
@@ -598,6 +594,53 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: 
         histories(nextMove) = 1 << (depth - 1)
       }
     }
+    (nextMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+
+
+abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    printHeader()
+    initCount()
+    val startTime = Platform.currentTime
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime
+    printCount("TranspositionTable", maxDepth, ply, stopTime - startTime)
+    printFooter()
+    m
+  }
+
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode()
+      printNode(node, score(node))
+      return (Move.empty, score(node))
+    }
+    countINode()
+    val moves = node.possibleMoves()
+    var nextMove = Move.empty
+    var alpha_ = alpha
+    breakable {
+      for (m <- moves) {
+        val n = node.play(m).get
+        printEdge(node, n, m)
+        val (_, s) = play(n, -beta, -alpha_, depth - 1)
+        if (-s > alpha_) {
+          nextMove = m
+          alpha_ = -s
+          if (alpha_ >= beta) {
+            printCutEdge(node)
+            break
+          }
+        }
+      }
+    }
+    printNode(node, alpha_)
     (nextMove, alpha_)
   }
 

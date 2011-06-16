@@ -25,8 +25,12 @@ case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
 
 trait Node[Repr <: Node[Repr]] {
   def play(move: Move): Option[Repr]
-  def possibleMoves(m: Marker): Seq[Move]
+  def possibleMoves(): Seq[Move]
   def isTerminal: Boolean
+
+  val marker: Marker = Dark
+  lazy val opponentMarker: Marker =
+    if (marker == Dark) Light else Dark
 }
 
 trait Board {
@@ -42,12 +46,9 @@ trait Player[N <: Node[N]] extends NodeCount {
 
   def init(m: Marker) {
     marker = m
-    opponentMarker = flipMarker(m)
   }
   
   def play(ply: Int, node: N, last: Move): Move
 
-  protected def flipMarker(m: Marker): Marker =
-    if (m == Dark) Light else Dark
 }
 

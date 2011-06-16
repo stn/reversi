@@ -61,6 +61,8 @@ object Game {
       case "history_32" => new HistoryPlayer[ReversiNode](6, 32) with MarkersScore
       case "history_64" => new HistoryPlayer[ReversiNode](6, 64) with MarkersScore
       case "history_128" => new HistoryPlayer[ReversiNode](6, 128) with MarkersScore
+
+      case "transposition6" => new TranspositionTablePlayer[ReversiNode](6) with MarkersScore
     }
 
   def main(originalArgs: Array[String]) {
