@@ -7,7 +7,7 @@ object Marker extends Enumeration {
 }
 import Marker._
 
-class Move
+class Move()
 
 object Move {
   val empty: Move = new Move

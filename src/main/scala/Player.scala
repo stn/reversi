@@ -604,13 +604,17 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: 
 
 abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
 
+  val transpositionTable: mutable.Map[String, (Int, Move, Int)] = mutable.Map.empty
+
   override def play(ply: Int, node: N, last: Move): Move = {
+    transpositionTable.clear()
     printHeader()
     initCount()
     val startTime = Platform.currentTime
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime
-    printCount("TranspositionTable", maxDepth, ply, stopTime - startTime)
+    printCount("transposition", maxDepth, ply, stopTime - startTime)
+    Log.d("TranspositionTable", transpositionTable.size.toString)
     printFooter()
     m
   }
@@ -622,7 +626,25 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
       return (Move.empty, score(node))
     }
     countINode()
-    val moves = node.possibleMoves()
+
+    // check transposition table
+    var storedMove = Move.empty
+    getNode(node) match {
+      case Some((d, m, s)) =>
+        if (d >= depth)
+          return (m, s)
+        else
+          storedMove = m
+      case None => // nothing
+    }
+    
+    var moves = node.possibleMoves().toList
+
+    // use the stored move if it is available
+    if (storedMove != Move.empty && (moves contains storedMove)) {
+      moves = storedMove :: (moves filterNot {_ == storedMove})
+    }
+
     var nextMove = Move.empty
     var alpha_ = alpha
     breakable {
@@ -640,8 +662,21 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
         }
       }
     }
+    putNode(node, depth, nextMove, alpha_)
     printNode(node, alpha_)
     (nextMove, alpha_)
+  }
+
+  def putNode(node: N, depth: Int, move: Move, score: Int) {
+    transpositionTable(node.toString) = (depth, move, score)
+  }
+
+  def getNode(node: N): Option[(Int, Move, Int)] = {
+    val k = node.toString
+    if (transpositionTable contains k)
+      Some(transpositionTable(k))
+    else
+      None
   }
 
   def score(node: N): Int
