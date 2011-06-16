@@ -547,3 +547,61 @@ abstract class HistoryNewPlayer[N <: Node[N]](val maxDepth: Int, val numHistorie
 
 }
 
+abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: Int) extends Player[N] {
+
+  var histories: mutable.Map[Move, Int] = _
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    histories = mutable.Map.empty
+    initCount()
+    val startTime = Platform.currentTime
+    val (m, s) = play(node, marker, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime
+    printCount("history", numHistories, ply, stopTime - startTime)
+    m
+  }
+
+  def play(node: N, mk: Marker, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode()
+      return (Move.empty, score(node))
+    }
+    countINode()
+    val fmk = flipMarker(mk)
+    var moves = node.possibleMoves(mk).toList
+    var nextMove = Move.empty
+    var alpha_ = alpha
+    breakable {
+      val histList = histories.toList.sortBy(- _._2) map (_._1)
+      var is = histList intersect moves
+      if (!is.isEmpty) {
+        moves = is ++ (moves diff is)
+      }
+      for (m <- moves) {
+        val n = node.play(m).get
+        val (_, s) = play(n, fmk, -beta, -alpha_, depth - 1)
+        if (-s > alpha_) {
+          nextMove = m
+          alpha_ = -s
+          if (alpha_ >= beta) {
+            break
+          }
+        }
+      }
+    }
+    // depth > 1: Schaeffer, History Heuristic and
+    // Alpha-Beta Search Enhancements (1989).
+    if (depth > 1) {
+      if (histories contains nextMove) {
+        histories(nextMove) = histories(nextMove) + (1 << (depth - 1))
+      } else {
+        histories(nextMove) = 1 << (depth - 1)
+      }
+    }
+    (nextMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+
