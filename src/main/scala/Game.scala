@@ -44,6 +44,8 @@ object Game {
       case "killerh6_64" => new KillerHeuristicPlayer[ReversiNode](6, 64) with MarkersScore
       case "killerh6_128" => new KillerHeuristicPlayer[ReversiNode](6, 128) with MarkersScore
 
+      case "killer_keep6_32" => new KillerHeuristicKeepPlayer[ReversiNode](6, 32) with MarkersScore
+
       case "history_new_1" => new HistoryNewPlayer[ReversiNode](6, 1) with MarkersScore
       case "history_new_2" => new HistoryNewPlayer[ReversiNode](6, 2) with MarkersScore
       case "history_new_4" => new HistoryNewPlayer[ReversiNode](6, 4) with MarkersScore
@@ -63,7 +65,9 @@ object Game {
       case "history_128" => new HistoryPlayer[ReversiNode](6, 128) with MarkersScore
 
       case "transposition6" => new TranspositionTablePlayer[ReversiNode](6) with MarkersScore
-      case "transposition_k6" => new TranspositionTableWithKillerPlayer[ReversiNode](6) with MarkersScore
+      case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
+      case "transposition_k6" => new TranspositionTableWithKillerPlayer[ReversiNode](6, 32) with MarkersScore
+      case "transposition_k_keep6" => new TranspositionTableWithKillerKeepPlayer[ReversiNode](6, 32) with MarkersScore
       case "transposition_h6" => new TranspositionTableWithHistoryPlayer[ReversiNode](6) with MarkersScore
     }
 
