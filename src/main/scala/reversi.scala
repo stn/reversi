@@ -87,6 +87,15 @@ class ReversiNode (
   override def toString: String =
     board.toString
 
+  override def toSignature: BigInt = {
+    var (darkKey, lightKey) = board.toSignature
+    if (marker == Dark) {
+      (BigInt(darkKey) << 64) + BigInt(lightKey)
+    } else {
+      (BigInt(lightKey) << 64) + BigInt(darkKey)
+    }
+  }
+
 }
 
 

@@ -498,7 +498,12 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, numKillerM
 
 abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
 
-  var killerMoves: Array[List[Move]] = Array.fill(100) { List.empty }
+  var killerMoves: Array[List[Move]] = _
+
+  override def init(m: Marker) {
+    super.init(m)
+    killerMoves = Array.fill(100) { List.empty }
+  }
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader()
@@ -676,12 +681,62 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: 
 }
 
 
-abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+object TranspositionTable {
+  val UNKNOWN = Int.MinValue
 
-  val transpositionTable: mutable.Map[String, (Int, Move, Int)] = mutable.Map.empty
+  val EXACT = 0
+  val ALPHA = -1
+  val BETA = 1
+}
+
+trait TranspositionTable[N <: Node[N]] {
+
+  var transpositionTable: mutable.Map[BigInt, (Int, Int, Int, Move)] = _
+
+  def transpositionTableInit() {
+    transpositionTable = mutable.Map.empty
+  }
+
+  def probeNode(node: N, depth: Int, alpha: Int, beta: Int)
+        : (Move, Int) = {
+    val key = node.toSignature
+    if (transpositionTable contains key) {
+      val (d, score, flag, best) = transpositionTable(key)
+      if (d == depth) {
+        if (flag == TranspositionTable.EXACT) {
+          return (best, score)
+        } else if (flag == TranspositionTable.ALPHA) {
+          if (score <= alpha)
+            return (best, alpha)
+        } else if (flag == TranspositionTable.BETA) {
+          if (score >= beta)
+            return (best, beta)
+        }
+      }
+      return (best, TranspositionTable.UNKNOWN)
+    }
+    return (Move.empty, TranspositionTable.UNKNOWN)
+  }
+
+  def recordNode(node: N, depth: Int, score: Int, flag: Int, best: Move) {
+    val key = node.toSignature
+    if (transpositionTable contains key) {
+      val (d, s, f, b) = transpositionTable(key)
+      if (d > depth
+          || (d == depth && (f == TranspositionTable.EXACT
+                          || flag != TranspositionTable.EXACT)))
+        return
+    }
+    transpositionTable(key) = (depth, score, flag, best)
+  }
+
+}
+
+
+abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] with TranspositionTable[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    transpositionTable.clear()
+    transpositionTableInit()
     printHeader()
     initCount()
     val startTime = Platform.currentTime
@@ -699,75 +754,56 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
       printNode(node, score(node))
       return (Move.empty, score(node))
     }
+
     countINode()
 
     // check transposition table
-    var storedMove = Move.empty
-    getNode(node) match {
-      case Some((d, m, s)) =>
-        if (d == depth)
-          return (m, s)
-        else
-          storedMove = m
-      case None => // nothing
-    }
+    val (recordedMove, recordedScore) = probeNode(node, depth, alpha, beta)
+    if (recordedScore != TranspositionTable.UNKNOWN)
+      return (recordedMove, recordedScore)
     
     var moves = node.possibleMoves().toList
 
-    // use the stored move if it is available
-    if (storedMove != Move.empty && (moves contains storedMove)) {
-      moves = storedMove :: (moves filterNot {_ == storedMove})
+    // use the recorded move if it is available
+    if (recordedMove != Move.empty && (moves contains recordedMove)) {
+      moves = recordedMove :: (moves filterNot {_ == recordedMove})
     }
 
-    var nextMove = Move.empty
+    var bestMove = Move.empty
     var alpha_ = alpha
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        printEdge(node, n, m)
-        val (_, s) = play(n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          nextMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            printCutEdge(node)
-            break
-          }
-        }
+    for (m <- moves) {
+      val n = node.play(m).get
+      printEdge(node, n, m)
+      val (_, s) = play(n, -beta, -alpha_, depth - 1)
+      if (-s >= beta) {
+        printCutEdge(node)
+        recordNode(node, depth, beta, TranspositionTable.BETA, m)
+        return (m, beta)
+      }
+      if (-s > alpha_) {
+        bestMove = m
+        alpha_ = -s
       }
     }
-    putNode(node, depth, nextMove, alpha_)
     printNode(node, alpha_)
-    (nextMove, alpha_)
-  }
-
-  def putNode(node: N, depth: Int, move: Move, score: Int) {
-    val key = node.toString
-    if (transpositionTable contains key) {
-      val (d, m, s) = transpositionTable(key)
-      if (d < depth) {
-        transpositionTable(key) = (depth, move, score)
-      }
+    if (alpha_ > alpha) {
+      recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
     } else {
-      transpositionTable(key) = (depth, move, score)
+      recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
     }
-  }
-
-  def getNode(node: N): Option[(Int, Move, Int)] = {
-    val k = node.toString
-    if (transpositionTable contains k)
-      Some(transpositionTable(k))
-    else
-      None
+    (bestMove, alpha_)
   }
 
   def score(node: N): Int
 
 }
 
-abstract class TranspositionTableKeepPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+abstract class TranspositionTableKeepPlayer[N <: Node[N]](override val maxDepth: Int) extends TranspositionTablePlayer[N](maxDepth) {
 
-  val transpositionTable: mutable.Map[String, (Int, Move, Int)] = mutable.Map.empty
+  override def init(m: Marker) {
+    super.init(m)
+    transpositionTableInit()
+  }
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader()
@@ -781,86 +817,15 @@ abstract class TranspositionTableKeepPlayer[N <: Node[N]](val maxDepth: Int) ext
     m
   }
 
-  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
-    if (depth == 0 || node.isTerminal) {
-      countTNode()
-      printNode(node, score(node))
-      return (Move.empty, score(node))
-    }
-    countINode()
-
-    // check transposition table
-    var storedMove = Move.empty
-    getNode(node) match {
-      case Some((d, m, s)) =>
-        if (d == depth)
-          return (m, s)
-        else
-          storedMove = m
-      case None => // nothing
-    }
-    
-    var moves = node.possibleMoves().toList
-
-    // use the stored move if it is available
-    if (storedMove != Move.empty && (moves contains storedMove)) {
-      moves = storedMove :: (moves filterNot {_ == storedMove})
-    }
-
-    var nextMove = Move.empty
-    var alpha_ = alpha
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        printEdge(node, n, m)
-        val (_, s) = play(n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          nextMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            printCutEdge(node)
-            break
-          }
-        }
-      }
-    }
-    putNode(node, depth, nextMove, alpha_)
-    printNode(node, alpha_)
-    (nextMove, alpha_)
-  }
-
-  def putNode(node: N, depth: Int, move: Move, score: Int) {
-    val key = node.toString
-    if (transpositionTable contains key) {
-      val (d, m, s) = transpositionTable(key)
-      if (d < depth) {
-        transpositionTable(key) = (depth, move, score)
-      }
-    } else {
-      transpositionTable(key) = (depth, move, score)
-    }
-  }
-
-  def getNode(node: N): Option[(Int, Move, Int)] = {
-    val k = node.toString
-    if (transpositionTable contains k)
-      Some(transpositionTable(k))
-    else
-      None
-  }
-
-  def score(node: N): Int
-
 }
 
 
-abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
+abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with VisualizeTree[N] with TranspositionTable[N] {
 
-  val transpositionTable: mutable.Map[String, (Int, Move, Int)] = mutable.Map.empty
   var killerMoves: Array[List[Move]] = _
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    transpositionTable.clear()
+    transpositionTableInit()
     killerMoves = Array.fill(maxDepth) { List.empty }
     printHeader()
     initCount()
@@ -883,15 +848,9 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
     countINode()
 
     // check transposition table
-    var storedMove = Move.empty
-    getNode(node) match {
-      case Some((d, m, s)) =>
-        if (d == depth)
-          return (m, s)
-        else
-          storedMove = m
-      case None => // nothing
-    }
+    val (recordedMove, recordedScore) = probeNode(node, depth, alpha, beta)
+    if (recordedScore != TranspositionTable.UNKNOWN)
+      return (recordedMove, recordedScore)
     
     var moves = node.possibleMoves().toList
 
@@ -902,275 +861,43 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
       moves = is ++ (moves diff is)
     }
 
-    // use the stored move if it is available
-    if (storedMove != Move.empty && (moves contains storedMove)) {
-      moves = storedMove :: (moves filterNot {_ == storedMove})
+    // use the recorded move if it is available
+    if (recordedMove != Move.empty && (moves contains recordedMove)) {
+      moves = recordedMove :: (moves filterNot {_ == recordedMove})
     }
 
-    var nextMove = Move.empty
+    var bestMove = Move.empty
     var alpha_ = alpha
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        printEdge(node, n, m)
-        val (_, s) = play(n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          nextMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            // store the killer move
-            if (km contains m) {
-              killerMoves(depth - 1) = m :: (km filterNot (_ == m))
-            } else {
-              killerMoves(depth - 1) = (m :: km) take numKillerMoves
-            }
-            printCutEdge(node)
-            break
-          }
+    for (m <- moves) {
+      val n = node.play(m).get
+      printEdge(node, n, m)
+      val (_, s) = play(n, -beta, -alpha_, depth - 1)
+      if (-s >= beta) {
+        // store the killer move
+        if (km contains m) {
+          killerMoves(depth - 1) = m :: (km filterNot (_ == m))
+        } else {
+          killerMoves(depth - 1) = (m :: km) take numKillerMoves
         }
+        printCutEdge(node)
+        recordNode(node, depth, beta, TranspositionTable.BETA, m)
+        return (m, beta)
+      }
+      if (-s > alpha_) {
+        bestMove = m
+        alpha_ = -s
       }
     }
-    putNode(node, depth, nextMove, alpha_)
     printNode(node, alpha_)
-    (nextMove, alpha_)
-  }
-
-  def putNode(node: N, depth: Int, move: Move, score: Int) {
-    val key = node.toString
-    if (transpositionTable contains key) {
-      val (d, m, s) = transpositionTable(key)
-      if (d < depth) {
-        transpositionTable(key) = (depth, move, score)
-      }
+    if (alpha_ > alpha) {
+      recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
     } else {
-      transpositionTable(key) = (depth, move, score)
+      recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
     }
-  }
-
-  def getNode(node: N): Option[(Int, Move, Int)] = {
-    val k = node.toString
-    if (transpositionTable contains k)
-      Some(transpositionTable(k))
-    else
-      None
+    (bestMove, alpha_)
   }
 
   def score(node: N): Int
 
 }
 
-
-abstract class TranspositionTableWithKillerKeepPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
-
-  val transpositionTable: mutable.Map[String, (Int, Move, Int)] = mutable.Map.empty
-  var killerMoves: Array[List[Move]] = Array.fill(100) { List.empty }
-
-  override def play(ply: Int, node: N, last: Move): Move = {
-    printHeader()
-    initCount()
-    val startTime = Platform.currentTime
-    val (m, s) = play(ply, node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime
-    printCount("transposition_k", maxDepth, ply, stopTime - startTime)
-    Log.d("TranspositionTable", transpositionTable.size.toString)
-    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
-    printFooter()
-    m
-  }
-
-  def play(ply: Int, node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
-    if (depth == 0 || node.isTerminal) {
-      countTNode()
-      printNode(node, score(node))
-      return (Move.empty, score(node))
-    }
-    countINode()
-
-    // check transposition table
-    var storedMove = Move.empty
-    getNode(node) match {
-      case Some((d, m, s)) =>
-        if (d == depth)
-          return (m, s)
-        else
-          storedMove = m
-      case None => // nothing
-    }
-    
-    var moves = node.possibleMoves().toList
-
-    // use killer moves
-    val km = killerMoves(ply)
-    var is = km intersect moves
-    if (!is.isEmpty) {
-      moves = is ++ (moves diff is)
-    }
-
-    // use the stored move if it is available
-    if (storedMove != Move.empty && (moves contains storedMove)) {
-      moves = storedMove :: (moves filterNot {_ == storedMove})
-    }
-
-    var nextMove = Move.empty
-    var alpha_ = alpha
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        printEdge(node, n, m)
-        val (_, s) = play(ply + 1, n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          nextMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            // store the killer move
-            if (km contains m) {
-              killerMoves(ply) = m :: (km filterNot (_ == m))
-            } else {
-              killerMoves(ply) = (m :: km) take numKillerMoves
-            }
-            printCutEdge(node)
-            break
-          }
-        }
-      }
-    }
-    putNode(node, depth, nextMove, alpha_)
-    printNode(node, alpha_)
-    (nextMove, alpha_)
-  }
-
-  def putNode(node: N, depth: Int, move: Move, score: Int) {
-    val key = node.toString
-    if (transpositionTable contains key) {
-      val (d, m, s) = transpositionTable(key)
-      if (d < depth) {
-        transpositionTable(key) = (depth, move, score)
-      }
-    } else {
-      transpositionTable(key) = (depth, move, score)
-    }
-  }
-
-  def getNode(node: N): Option[(Int, Move, Int)] = {
-    val k = node.toString
-    if (transpositionTable contains k)
-      Some(transpositionTable(k))
-    else
-      None
-  }
-
-  def score(node: N): Int
-
-}
-
-
-abstract class TranspositionTableWithHistoryPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
-
-  val transpositionTable: mutable.Map[String, (Int, Move, Int)] = mutable.Map.empty
-  val histories: mutable.Map[Move, Int] = mutable.Map.empty
-
-
-  override def play(ply: Int, node: N, last: Move): Move = {
-    transpositionTable.clear()
-    histories.clear()
-    printHeader()
-    initCount()
-    val startTime = Platform.currentTime
-    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime
-    printCount("transposition_h", maxDepth, ply, stopTime - startTime)
-    Log.d("TranspositionTable", transpositionTable.size.toString)
-    printFooter()
-    m
-  }
-
-  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
-    if (depth == 0 || node.isTerminal) {
-      countTNode()
-      printNode(node, score(node))
-      return (Move.empty, score(node))
-    }
-    countINode()
-
-    // check transposition table
-    var storedMove = Move.empty
-    getNode(node) match {
-      case Some((d, m, s)) =>
-        if (d == depth)
-          return (m, s)
-        else
-          storedMove = m
-      case None => // nothing
-    }
-    
-    var moves = node.possibleMoves().toList
-
-    // use history
-    val histList = histories.toList.sortBy(- _._2) map (_._1)
-    var is = histList intersect moves
-    if (!is.isEmpty) {
-      moves = is ++ (moves diff is)
-    }
-
-    // use the stored move if it is available
-    if (storedMove != Move.empty && (moves contains storedMove)) {
-      moves = storedMove :: (moves filterNot {_ == storedMove})
-    }
-
-    var nextMove = Move.empty
-    var alpha_ = alpha
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        printEdge(node, n, m)
-        val (_, s) = play(n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          nextMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            printCutEdge(node)
-            break
-          }
-        }
-      }
-    }
-    // Store history
-    //
-    // depth > 1: Schaeffer, History Heuristic and
-    // Alpha-Beta Search Enhancements (1989).
-    if (depth > 1) {
-      if (histories contains nextMove) {
-        histories(nextMove) = histories(nextMove) + (1 << (depth - 1))
-      } else {
-        histories(nextMove) = 1 << (depth - 1)
-      }
-    }
-    // Store node into transposition table
-    putNode(node, depth, nextMove, alpha_)
-    printNode(node, alpha_)
-    (nextMove, alpha_)
-  }
-
-  def putNode(node: N, depth: Int, move: Move, score: Int) {
-    val key = node.toString
-    if (transpositionTable contains key) {
-      val (d, m, s) = transpositionTable(key)
-      if (d < depth) {
-        transpositionTable(key) = (depth, move, score)
-      }
-    } else {
-      transpositionTable(key) = (depth, move, score)
-    }
-  }
-
-  def getNode(node: N): Option[(Int, Move, Int)] = {
-    val k = node.toString
-    if (transpositionTable contains k)
-      Some(transpositionTable(k))
-    else
-      None
-  }
-
-  def score(node: N): Int
-
-}

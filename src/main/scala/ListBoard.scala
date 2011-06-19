@@ -37,6 +37,21 @@ class ListBoard (
     ax + b.mkString + ax
   }
 
+  def toSignature: (Long, Long) = {
+    var darkKey = 0L
+    var lightKey = 0L
+    var bit = 1L
+    for (m <- list) {
+      if (m == Dark) {
+        darkKey |= bit
+      } else if (m == Light) {
+        lightKey |= bit
+      }
+      bit <<= 1
+    }
+    (darkKey, lightKey)
+  }
+
   def isFull: Boolean = list.forall { _ != Blank }
 
 }

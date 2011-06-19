@@ -31,6 +31,8 @@ trait Node[Repr <: Node[Repr]] {
   val marker: Marker = Dark
   lazy val opponentMarker: Marker =
     if (marker == Dark) Light else Dark
+
+  def toSignature: BigInt
 }
 
 trait Board {
