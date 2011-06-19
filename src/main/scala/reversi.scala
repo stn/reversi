@@ -113,6 +113,9 @@ trait MarkersScore {
 
   var marker: Marker
 
+  /**
+   * Returns a score for the marker
+   */
   def score(node: ReversiNode): Int = {
     val nums = node.board.numOfMarkers
     if (marker == Dark) nums(Dark) - nums(Light)

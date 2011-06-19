@@ -31,18 +31,18 @@ object Game {
       case "negaalpha5" => new NegaAlphaBetaPlayer[ReversiNode](5) with MarkersScore
       case "negaalpha6" => new NegaAlphaBetaPlayer[ReversiNode](6) with MarkersScore
 
-      case "killerh2_1" => new KillerHeuristicPlayer[ReversiNode](2, 1) with MarkersScore
-      case "killerh3_1" => new KillerHeuristicPlayer[ReversiNode](3, 1) with MarkersScore
-      case "killerh4_1" => new KillerHeuristicPlayer[ReversiNode](4, 1) with MarkersScore
-      case "killerh5_1" => new KillerHeuristicPlayer[ReversiNode](5, 1) with MarkersScore
-      case "killerh6_1" => new KillerHeuristicPlayer[ReversiNode](6, 1) with MarkersScore
-      case "killerh6_2" => new KillerHeuristicPlayer[ReversiNode](6, 2) with MarkersScore
-      case "killerh6_4" => new KillerHeuristicPlayer[ReversiNode](6, 4) with MarkersScore
-      case "killerh6_8" => new KillerHeuristicPlayer[ReversiNode](6, 8) with MarkersScore
-      case "killerh6_16" => new KillerHeuristicPlayer[ReversiNode](6, 16) with MarkersScore
-      case "killerh6_32" => new KillerHeuristicPlayer[ReversiNode](6, 32) with MarkersScore
-      case "killerh6_64" => new KillerHeuristicPlayer[ReversiNode](6, 64) with MarkersScore
-      case "killerh6_128" => new KillerHeuristicPlayer[ReversiNode](6, 128) with MarkersScore
+      case "killer2_1" => new KillerHeuristicPlayer[ReversiNode](2, 1) with MarkersScore
+      case "killer3_1" => new KillerHeuristicPlayer[ReversiNode](3, 1) with MarkersScore
+      case "killer4_1" => new KillerHeuristicPlayer[ReversiNode](4, 1) with MarkersScore
+      case "killer5_1" => new KillerHeuristicPlayer[ReversiNode](5, 1) with MarkersScore
+      case "killer6_1" => new KillerHeuristicPlayer[ReversiNode](6, 1) with MarkersScore
+      case "killer6_2" => new KillerHeuristicPlayer[ReversiNode](6, 2) with MarkersScore
+      case "killer6_4" => new KillerHeuristicPlayer[ReversiNode](6, 4) with MarkersScore
+      case "killer6_8" => new KillerHeuristicPlayer[ReversiNode](6, 8) with MarkersScore
+      case "killer6_16" => new KillerHeuristicPlayer[ReversiNode](6, 16) with MarkersScore
+      case "killer6_32" => new KillerHeuristicPlayer[ReversiNode](6, 32) with MarkersScore
+      case "killer6_64" => new KillerHeuristicPlayer[ReversiNode](6, 64) with MarkersScore
+      case "killer6_128" => new KillerHeuristicPlayer[ReversiNode](6, 128) with MarkersScore
 
       case "killer_keep6_32" => new KillerHeuristicKeepPlayer[ReversiNode](6, 32) with MarkersScore
 
