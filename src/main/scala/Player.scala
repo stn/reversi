@@ -468,7 +468,7 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, override v
     val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime //T
-    printCount("KillerMove", numKillerMoves, ply, stopTime - startTime) //C
+    printCount("KillerHeuristic", numKillerMoves, ply, stopTime - startTime) //C
     Log.i("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V
     m
@@ -514,13 +514,11 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, override v
 
 }
 
-abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, numKillerMoves: Int) extends Player[N] with VisualizeTree[N] {
-
-  var killerMoves: Array[List[Move]] = _
+abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, override val numKillerMoves: Int) extends Player[N] with KillerHeuristic[N] with VisualizeTree[N] {
 
   override def init(m: Marker) {
     super.init(m)
-    killerMoves = Array.fill(100) { List.empty }
+    initKillerMoves(100) // need a constant
   }
 
   override def play(ply: Int, node: N, last: Move): Move = {
@@ -529,7 +527,7 @@ abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, numKil
     val startTime = Platform.currentTime //T
     val (m, s) = play(ply, node, Int.MinValue + 1, Int.MaxValue, maxDepth)
     val stopTime = Platform.currentTime //T
-    printCount("KillerMove", numKillerMoves, ply, stopTime - startTime) //C
+    printCount("KillerHeuristic (keep)", numKillerMoves, ply, stopTime - startTime) //C
     Log.i("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V
     m
@@ -542,36 +540,29 @@ abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, numKil
       return (Move.empty, score(node))
     }
     countINode() //C
+
     var moves = node.possibleMoves().toList
+
+    // reorder by killer moves
+    moves = reorderByKillerMoves(ply, moves)
+
+    // nega-alpha search
     var bestMove = Move.empty
     var alpha_ = alpha
-    
-    // killer moves
-    val km = killerMoves(ply)
-    var is = km intersect moves
-    if (!is.isEmpty) {
-      moves = is ++ (moves diff is)
-    }
-
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        printEdge(node, n, m) //V
-        val (_, s) = play(ply + 1, n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          bestMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            // store the killer move
-            if (km contains m) {
-              killerMoves(ply) = m :: (km filterNot (_ == m))
-            } else {
-              killerMoves(ply) = (m :: km) take numKillerMoves
-            }
-            printCutEdge(node) //V
-            break
-          }
-        }
+    for (m <- moves) {
+      val n = node.play(m).get
+      printEdge(node, n, m) //V
+      val (_, s) = play(ply + 1, n, -beta, -alpha_, depth - 1)
+      if (-s >= beta) { // beta cut
+        // record the killer move
+        recordKillerMove(ply, m)
+        printCutEdge(node) //V
+        printNode(node, beta) //V
+        return (m, beta)
+      }
+      if (-s > alpha_) {
+        bestMove = m
+        alpha_ = -s
       }
     }
     printNode(node, alpha_) //V
