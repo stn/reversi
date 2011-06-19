@@ -573,65 +573,45 @@ abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, overri
 
 }
 
-abstract class HistoryNewPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: Int) extends Player[N] {
 
-  var histories: List[Move] = _
+trait HistoryHeuristic[N <: Node[N]] {
 
-  override def play(ply: Int, node: N, last: Move): Move = {
-    histories = List.empty
-    initCount() //C
-    val startTime = Platform.currentTime //T
-    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("historyNew", numHistories, ply, stopTime - startTime) //C
-    m
+  val numHistories: Int
+
+  var historyMoves: mutable.Map[Move, Int] = _
+
+  def initHistory() {
+    historyMoves = mutable.Map.empty
   }
 
-  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
-    if (depth == 0 || node.isTerminal) {
-      countTNode() //C
-      return (Move.empty, score(node))
-    }
-    countINode() //C
-    var moves = node.possibleMoves().toList
-    var bestMove = Move.empty
-    var alpha_ = alpha
-    breakable {
-      var is = histories intersect moves
-      if (!is.isEmpty) {
-        moves = is ++ (moves diff is)
-      }
-      for (m <- moves) {
-        val n = node.play(m).get
-        val (_, s) = play(n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          bestMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            break
-          }
-        }
-      }
-    }
-    if (histories contains bestMove) {
-      histories = bestMove :: (histories filterNot (_ == bestMove))
-    } else {
-      histories = (bestMove :: histories) take numHistories
-    }
-    (bestMove, alpha_)
+  def reorderByHistory(moves: List[Move]): List[Move] = {
+    val histList = historyMoves.toList.sortBy(- _._2) map (_._1)
+    var is = histList intersect moves
+    if (!is.isEmpty)
+      is ++ (moves diff is)
+    else
+      moves
   }
 
-  def score(node: N): Int
+  def recordHistory(best: Move, depth: Int) {
+    // depth > 1: Schaeffer, History Heuristic and
+    // Alpha-Beta Search Enhancements (1989).
+    if (depth > 1) {
+      if (historyMoves contains best) {
+        historyMoves(best) = historyMoves(best) + (1 << (depth - 1))
+      } else {
+        historyMoves(best) = 1 << (depth - 1)
+      }
+    }
+  }
 
 }
 
-abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: Int) extends Player[N] {
 
-  var histories: mutable.Map[Move, Int] = _
+abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, override val numHistories: Int) extends Player[N] with HistoryHeuristic[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    // initialize history
-    histories = mutable.Map.empty
+    initHistory()
     initCount() //C
     val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
@@ -646,42 +626,31 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, val numHistories: 
       return (Move.empty, score(node))
     }
     countINode() //C
+
     var moves = node.possibleMoves().toList
     var bestMove = Move.empty
     var alpha_ = alpha
 
     // use history
-    val histList = histories.toList.sortBy(- _._2) map (_._1)
-    var is = histList intersect moves
-    if (!is.isEmpty) {
-      moves = is ++ (moves diff is)
-    }
+    moves = reorderByHistory(moves)
 
-    breakable {
-      for (m <- moves) {
-        val n = node.play(m).get
-        val (_, s) = play(n, -beta, -alpha_, depth - 1)
-        if (-s > alpha_) {
-          bestMove = m
-          alpha_ = -s
-          if (alpha_ >= beta) {
-            break
-          }
-        }
+    for (m <- moves) {
+      val n = node.play(m).get
+      val (_, s) = play(n, -beta, -alpha_, depth - 1)
+      if (-s >= beta) { // beta cut
+        recordHistory(m, depth)
+        return (m, beta)
+      }
+      if (-s > alpha_) {
+        bestMove = m
+        alpha_ = -s
       }
     }
 
-    // Store history
-    //
-    // depth > 1: Schaeffer, History Heuristic and
-    // Alpha-Beta Search Enhancements (1989).
-    if (depth > 1) {
-      if (histories contains bestMove) {
-        histories(bestMove) = histories(bestMove) + (1 << (depth - 1))
-      } else {
-        histories(bestMove) = 1 << (depth - 1)
-      }
-    }
+    // record the best move into history
+    if (alpha_ > alpha)
+      recordHistory(bestMove, depth)
+
     (bestMove, alpha_)
   }
 
@@ -702,7 +671,7 @@ trait TranspositionTable[N <: Node[N]] {
 
   var transpositionTable: mutable.Map[BigInt, (Int, Int, Int, Move)] = _
 
-  def transpositionTableInit() {
+  def initTranspositionTable() {
     transpositionTable = mutable.Map.empty
   }
 
@@ -711,7 +680,7 @@ trait TranspositionTable[N <: Node[N]] {
     val key = node.toSignature
     if (transpositionTable contains key) {
       val (d, score, flag, best) = transpositionTable(key)
-      if (d == depth) {
+      if (d >= depth) { // d == depth is safer.
         if (flag == TranspositionTable.EXACT) {
           return (best, score)
         } else if (flag == TranspositionTable.ALPHA) {
@@ -745,7 +714,7 @@ trait TranspositionTable[N <: Node[N]] {
 abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] with TranspositionTable[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    transpositionTableInit()
+    initTranspositionTable()
     printHeader() //V
     initCount() //C
     val startTime = Platform.currentTime //T
@@ -811,7 +780,7 @@ abstract class TranspositionTableKeepPlayer[N <: Node[N]](override val maxDepth:
 
   override def init(m: Marker) {
     super.init(m)
-    transpositionTableInit()
+    initTranspositionTable()
   }
 
   override def play(ply: Int, node: N, last: Move): Move = {
@@ -829,13 +798,11 @@ abstract class TranspositionTableKeepPlayer[N <: Node[N]](override val maxDepth:
 }
 
 
-abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with VisualizeTree[N] with TranspositionTable[N] {
-
-  var killerMoves: Array[List[Move]] = _
+abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with VisualizeTree[N] with KillerHeuristic[N] with TranspositionTable[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
-    transpositionTableInit()
-    killerMoves = Array.fill(maxDepth) { List.empty }
+    initKillerMoves(maxDepth)
+    initTranspositionTable()
     printHeader() //V
     initCount() //C
     val startTime = Platform.currentTime //T
@@ -864,11 +831,7 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
     var moves = node.possibleMoves().toList
 
     // use killer moves
-    val km = killerMoves(depth - 1)
-    var is = km intersect moves
-    if (!is.isEmpty) {
-      moves = is ++ (moves diff is)
-    }
+    moves = reorderByKillerMoves(depth - 1, moves)
 
     // use the recorded move if it is available
     if (recordedMove != Move.empty && (moves contains recordedMove)) {
@@ -882,13 +845,10 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
       printEdge(node, n, m) //V
       val (_, s) = play(n, -beta, -alpha_, depth - 1)
       if (-s >= beta) {
-        // store the killer move
-        if (km contains m) {
-          killerMoves(depth - 1) = m :: (km filterNot (_ == m))
-        } else {
-          killerMoves(depth - 1) = (m :: km) take numKillerMoves
-        }
         printCutEdge(node) //V
+        // record the killer move
+        recordKillerMove(depth - 1, m)
+        // record transpositon table
         recordNode(node, depth, beta, TranspositionTable.BETA, m)
         return (m, beta)
       }
@@ -898,11 +858,10 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
       }
     }
     printNode(node, alpha_) //V
-    if (alpha_ > alpha) {
+    if (alpha_ > alpha)
       recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
-    } else {
+    else
       recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
-    }
     (bestMove, alpha_)
   }
 

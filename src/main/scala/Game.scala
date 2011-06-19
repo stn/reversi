@@ -46,15 +46,6 @@ object Game {
 
       case "killer_keep6_32" => new KillerHeuristicKeepPlayer[ReversiNode](6, 32) with MarkersScore
 
-      case "history_new_1" => new HistoryNewPlayer[ReversiNode](6, 1) with MarkersScore
-      case "history_new_2" => new HistoryNewPlayer[ReversiNode](6, 2) with MarkersScore
-      case "history_new_4" => new HistoryNewPlayer[ReversiNode](6, 4) with MarkersScore
-      case "history_new_8" => new HistoryNewPlayer[ReversiNode](6, 8) with MarkersScore
-      case "history_new_16" => new HistoryNewPlayer[ReversiNode](6, 16) with MarkersScore
-      case "history_new_32" => new HistoryNewPlayer[ReversiNode](6, 32) with MarkersScore
-      case "history_new_64" => new HistoryNewPlayer[ReversiNode](6, 64) with MarkersScore
-      case "history_new_128" => new HistoryNewPlayer[ReversiNode](6, 128) with MarkersScore
-      
       case "history_1" => new HistoryPlayer[ReversiNode](6, 1) with MarkersScore
       case "history_2" => new HistoryPlayer[ReversiNode](6, 2) with MarkersScore
       case "history_4" => new HistoryPlayer[ReversiNode](6, 4) with MarkersScore
