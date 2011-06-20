@@ -638,6 +638,7 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, override val numHi
       val n = node.play(m).get
       val (_, s) = play(n, -beta, -alpha_, depth - 1)
       if (-s >= beta) { // beta cut
+        // record the move into history
         recordHistory(m, depth)
         return (m, beta)
       }
@@ -755,6 +756,7 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
       val (_, s) = play(n, -beta, -alpha_, depth - 1)
       if (-s >= beta) {
         printCutEdge(node) //V
+        // record the node into transposition table
         recordNode(node, depth, beta, TranspositionTable.BETA, m)
         return (m, beta)
       }
@@ -764,11 +766,13 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
       }
     }
     printNode(node, alpha_) //V
-    if (alpha_ > alpha) {
+
+    // record the node into transposition table
+    if (alpha_ > alpha)
       recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
-    } else {
+    else
       recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
-    }
+
     (bestMove, alpha_)
   }
 
@@ -862,6 +866,84 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
       recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
     else
       recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
+    (bestMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+
+
+abstract class TranspositionTableWithHistoryPlayer[N <: Node[N]](val maxDepth: Int, override val numHistories: Int) extends Player[N] with VisualizeTree[N] with HistoryHeuristic[N] with TranspositionTable[N] {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    initHistory()
+    initTranspositionTable()
+    printHeader() //V
+    initCount() //C
+    val startTime = Platform.currentTime //T
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime //T
+    printCount("transposition_h", maxDepth, ply, stopTime - startTime) //C
+    printCount("history", numHistories, ply, stopTime - startTime) //C
+    printFooter() //V
+    m
+  }
+
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (Move.empty, score(node))
+    }
+    countINode() //C
+
+    // check transposition table
+    val (recordedMove, recordedScore) = probeNode(node, depth, alpha, beta)
+    if (recordedScore != TranspositionTable.UNKNOWN)
+      return (recordedMove, recordedScore)
+    
+    var moves = node.possibleMoves().toList
+
+    // use history
+    moves = reorderByHistory(moves)
+
+    // use the recorded move if it is available
+    if (recordedMove != Move.empty && (moves contains recordedMove)) {
+      moves = recordedMove :: (moves filterNot {_ == recordedMove})
+    }
+
+    var bestMove = Move.empty
+    var alpha_ = alpha
+    for (m <- moves) {
+      val n = node.play(m).get
+      printEdge(node, n, m) //V
+      val (_, s) = play(n, -beta, -alpha_, depth - 1)
+      if (-s >= beta) {
+        printCutEdge(node) //V
+        // record transpositon table
+        recordNode(node, depth, beta, TranspositionTable.BETA, m)
+        // record the move into history
+        recordHistory(m, depth)
+        return (m, beta)
+      }
+      if (-s > alpha_) {
+        bestMove = m
+        alpha_ = -s
+      }
+    }
+    printNode(node, alpha_) //V
+
+    // transposition table
+    if (alpha_ > alpha)
+      recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
+    else
+      recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
+
+    // record the best move into history
+    if (alpha_ > alpha)
+      recordHistory(bestMove, depth)
+
     (bestMove, alpha_)
   }
 
