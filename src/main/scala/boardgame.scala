@@ -14,12 +14,11 @@ object Move {
 }
 
 case object Pass extends Move
-case class PutMarker(x: Int, y: Int, m: Marker) extends Move {
+case class PutMarker(x: Int, y: Int) extends Move {
   override def toString: String = {
-    val ms = m.toString.charAt(0)
     val xs = ('a' + x).asInstanceOf[Char]
     val ys = ('1' + y).asInstanceOf[Char]
-    ms + "-" + xs + ys
+    "" + xs + ys
   }
 }
 

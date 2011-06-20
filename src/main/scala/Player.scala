@@ -46,7 +46,7 @@ class SimpleHeuristicsPlayer[N <: Node[N]] extends Player[N] {
     var maxS = Int.MinValue
     for (m <- moves) {
       (m: @unchecked) match {
-        case PutMarker(x, y, _) =>
+        case PutMarker(x, y) =>
           val s = score(x, y)
           if (s > maxS) {
             bestMove = List(m)

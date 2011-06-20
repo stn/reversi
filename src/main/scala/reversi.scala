@@ -24,8 +24,7 @@ class ReversiNode (
     (move: @unchecked) match {
       case Pass =>
         Some(new ReversiNode(opponentMarker, board, true, passed))
-      case PutMarker(x, y, m) =>
-        assert(m == marker)
+      case PutMarker(x, y) =>
         if (board(x, y) != Blank) return None
         val (b, n) = reverse(x, y)
         if (n > 0)
@@ -70,7 +69,7 @@ class ReversiNode (
               if (board(x, y) == Blank)
               (b, n) = reverse(x, y)
               if (n > 0)
-        } yield PutMarker(x, y, marker)
+        } yield PutMarker(x, y)
     if (moves.isEmpty) List(Pass)
     else moves
   }
