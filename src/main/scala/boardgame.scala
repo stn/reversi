@@ -14,6 +14,13 @@ object Move {
 }
 
 case object Pass extends Move
+
+/*
+object PutMarker {
+  def apply(x: Int, y: Int): Move = new PutMarker(x, y)
+  def unapply(x: Tuple2[Int, Int]): Option[Tuple2[Int, Int]] = Some(x)
+}
+*/
 case class PutMarker(x: Int, y: Int) extends Move {
   override def toString: String = {
     val xs = ('a' + x).asInstanceOf[Char]
@@ -50,6 +57,5 @@ trait Player[N <: Node[N]] extends NodeCount {
   }
   
   def play(ply: Int, node: N, last: Move): Move
-
 }
 

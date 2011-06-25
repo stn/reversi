@@ -7,14 +7,16 @@ import boardgame.Marker._
 
 
 class BoardGameSpec extends Spec with ShouldMatchers {
- 
-  describe("A ListBoard") {
-  
-    it("should be an empty board") {
-      val b = new ListBoard()
-      for { x <- 0 until 8
-            y <- 0 until 8
-      } b(x, y) should be (Blank)
+
+  describe("A PutMarker") {
+    it("should be converted to a string by toString") {
+      PutMarker(0, 0).toString should be ("a1")
+      PutMarker(7, 7).toString should be ("h8")
+    }
+
+    it("should be a comparable") {
+      PutMarker(0, 0) should be (PutMarker(0, 0))
+      PutMarker(0, 0) should not be (PutMarker(0, 1))
     }
   }
 

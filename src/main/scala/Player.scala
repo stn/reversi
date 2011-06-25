@@ -11,7 +11,10 @@ import boardgame.Marker._
 class RandomPlayer[N <: Node[N]] extends Player[N] {
   override def play(ply: Int, node: N, last: Move): Move = {
     val moves = node.possibleMoves()
-    moves(Random.nextInt(moves.length))
+    if (moves.length > 0)
+      moves(Random.nextInt(moves.length))
+    else
+      Move.empty
   }
 }
 
@@ -576,6 +579,8 @@ abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, overri
 
 trait HistoryHeuristic[N <: Node[N]] {
 
+  val MIN_DEPTH_FOR_HISTORY = 2
+
   val numHistories: Int
 
   var historyMoves: mutable.Map[Move, Int] = _
@@ -596,11 +601,11 @@ trait HistoryHeuristic[N <: Node[N]] {
   def recordHistory(best: Move, depth: Int) {
     // depth > 1: Schaeffer, History Heuristic and
     // Alpha-Beta Search Enhancements (1989).
-    if (depth > 1) {
+    if (depth >= MIN_DEPTH_FOR_HISTORY) {
       if (historyMoves contains best) {
-        historyMoves(best) = historyMoves(best) + (1 << (depth - 1))
+        historyMoves(best) = historyMoves(best) + (1 << (depth - MIN_DEPTH_FOR_HISTORY))
       } else {
-        historyMoves(best) = 1 << (depth - 1)
+        historyMoves(best) = 1 << (depth - MIN_DEPTH_FOR_HISTORY)
       }
     }
   }

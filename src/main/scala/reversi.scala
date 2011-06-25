@@ -9,21 +9,13 @@ import boardgame.Marker._
 
 class ReversiNode (
     override val marker: Marker,
-    val board: ListBoard,
-    val passed: Boolean,
-    val terminal: Boolean
+    val board: ListBoard
 ) extends Node[ReversiNode] {
  
-  def this(marker: Marker, board: ListBoard) =
-      this(marker, board, false, false)
-
-  def this(marker: Marker, board: ListBoard, passed: Boolean) =
-      this(marker, board, passed, false)
-
   override def play(move: Move): Option[ReversiNode] =
     (move: @unchecked) match {
       case Pass =>
-        Some(new ReversiNode(opponentMarker, board, true, passed))
+        Some(new ReversiNode(opponentMarker, board))
       case PutMarker(x, y) =>
         if (board(x, y) != Blank) return None
         val (b, n) = reverse(x, y)
@@ -74,7 +66,16 @@ class ReversiNode (
     else moves
   }
 
-  def isTerminal: Boolean = terminal || board.isFull
+  def isTerminal: Boolean = {
+    if (board.isFull) return true
+    if (possibleMoves == List(Pass)) {
+      val next = play(Pass).get
+      if (next.possibleMoves == List(Pass)) {
+        return true
+      }
+    }
+    false
+  }
 
   def winner: Marker = {
     val nums = board.numOfMarkers
