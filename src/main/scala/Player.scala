@@ -703,6 +703,7 @@ trait TranspositionTable[N <: Node[N]] {
   }
 
   def recordNode(node: N, depth: Int, score: Int, flag: Int, best: Move) {
+    if (best == Move.empty) return
     val key = node.toSignature
     if (transpositionTable contains key) {
       val (d, s, f, b) = transpositionTable(key)
