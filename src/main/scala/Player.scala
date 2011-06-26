@@ -957,3 +957,60 @@ abstract class TranspositionTableWithHistoryPlayer[N <: Node[N]](val maxDepth: I
 
 }
 
+
+abstract class TranspositionTableWithKillerKeepPlayer[N <: Node[N]](
+  override val maxDepth: Int,
+  override val numKillerMoves: Int
+) extends TranspositionTableWithKillerPlayer[N](maxDepth, numKillerMoves) {
+
+  override def init(m: Marker) {
+    super.init(m)
+    initKillerMoves(maxDepth)
+    initTranspositionTable()
+  }
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    printHeader() //V
+    initCount() //C
+    val startTime = Platform.currentTime //T
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    val stopTime = Platform.currentTime //T
+    printCount("transposition_k_keep", maxDepth, ply, stopTime - startTime) //C
+    Log.d("TranspositionTable", transpositionTable.size.toString)
+    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
+    printFooter() //V
+    m
+  }
+
+}
+
+
+abstract class IterativeDeepeningTKPlayer[N <: Node[N]](
+  override val maxDepth: Int,
+  override val numKillerMoves: Int
+) extends TranspositionTableWithKillerKeepPlayer[N](maxDepth, numKillerMoves) {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    initKillerMoves(maxDepth)
+    initTranspositionTable()
+    printHeader() //V
+    initCount() //C
+    val startTime = Platform.currentTime //T
+    var m = Move.empty
+    var s = 0
+    for (d <- 1 to maxDepth) {
+      var ret = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+      m = ret._1
+      s = ret._2
+      Log.d("IterativeDeepening", "depth = " + d + ", m = " + m + ", s = " + s)
+    }
+    val stopTime = Platform.currentTime //T
+    printCount("iterative_deepening_tk", maxDepth, ply, stopTime - startTime) //C
+    Log.d("TranspositionTable", transpositionTable.size.toString)
+    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
+    printFooter() //V
+    m
+  }
+
+}
+

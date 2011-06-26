@@ -973,5 +973,183 @@ class PlaySpec extends Spec with ShouldMatchers {
 
   }
 
+  describe("TranspositionTableWithKillerKeepPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new TranspositionTableWithKillerKeepPlayer[UniformNode](2, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      player.initKillerMoves(2)
+      player.initTranspositionTable
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 2)
+      m0 should be (Move.empty)
+      s0 should be (1)
+      player.transpositionTable.toList should be (List())
+    }
+
+    it("should return the max value of 1-depth tree.") {
+      val player = new TranspositionTableWithKillerKeepPlayer[UniformNode](1, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314", Dark, 3)
+      player.initKillerMoves(1)
+      player.initTranspositionTable
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 1)
+      m0 should be (PosMove(1))
+      s0 should be (-1)
+      player.transpositionTable.toList should be (List(
+          (BigInt(314), (1, -1, TranspositionTable.EXACT, PosMove(1)))))
+    }
+
+    it("should return a min max value.") {
+      val player = new TranspositionTableWithKillerKeepPlayer[UniformNode](2, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("324159870", Dark, 3)
+      player.initKillerMoves(2)
+      player.initTranspositionTable
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 2)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+      player.transpositionTable.toList should be (List(
+          (BigInt(324159870), (2, 2, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(159), (1, -2, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(324), (1, -2, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(870), (1, -2, TranspositionTable.BETA, PosMove(2)))))
+    }
+
+    it("should return a min max value for 3-depth tree.") {
+      val player = new TranspositionTableWithKillerKeepPlayer[UniformNode](3, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("12345678", Dark, 2)
+      player.initKillerMoves(3)
+      player.initTranspositionTable
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 3)
+      m0 should be (PosMove(0))
+      s0 should be (-3)
+      player.transpositionTable.toList should be (List(
+          (BigInt(12), (1, -1, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(1234), (2, 3, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new TranspositionTableWithKillerKeepPlayer[UniformNode](4, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1234567898765432", Dark, 2)
+      player.initKillerMoves(4)
+      player.initTranspositionTable
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 4)
+      m0 should be (PosMove(1))
+      s0 should be (4)
+      player.transpositionTable.toList should be (List(
+          (BigInt(12), (1, -1, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(54), (1, -4, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(1234), (2, 3, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(98765432), (3, -4, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt("1234567898765432"), (4, 4, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(9876), (2, 8, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(5432), (2, 4, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(32), (1, -4, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(98), (1, -8, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(76), (1, -8, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new TranspositionTableWithKillerKeepPlayer[UniformNode](4, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      player.initKillerMoves(4)
+      player.initTranspositionTable
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 4)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+    }
+
+  }
+
+  describe("IterativeDeepeningTKPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new IterativeDeepeningTKPlayer[UniformNode](2, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      val m0 = player.play(0, b0, Move.empty)
+      m0 should be (Move.empty)
+      player.transpositionTable.toList should be (List())
+    }
+
+    it("should return the max value of 1-depth tree.") {
+      val player = new IterativeDeepeningTKPlayer[UniformNode](1, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314", Dark, 3)
+      val m0 = player.play(0, b0, Move.empty)
+      m0 should be (PosMove(1))
+      player.transpositionTable.toList should be (List(
+          (BigInt(314), (1, -1, TranspositionTable.EXACT, PosMove(1)))))
+    }
+
+    it("should return a min max value.") {
+      val player = new IterativeDeepeningTKPlayer[UniformNode](2, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("324159870", Dark, 3)
+      val m0 = player.play(0, b0, Move.empty)
+      m0 should be (PosMove(0))
+      player.transpositionTable.toList should be (List(
+          (BigInt(324159870), (2, 2, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(159), (1, -2, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(324), (1, -2, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(870), (1, -2, TranspositionTable.BETA, PosMove(2)))))
+    }
+
+    it("should return a min max value for 3-depth tree.") {
+      val player = new IterativeDeepeningTKPlayer[UniformNode](3, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("12345678", Dark, 2)
+      val m0 = player.play(0, b0, Move.empty)
+      m0 should be (PosMove(0))
+      player.transpositionTable.toList should be (List(
+          (BigInt(12), (1, -1, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(1234), (2, 3, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new IterativeDeepeningTKPlayer[UniformNode](4, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1234567898765432", Dark, 2)
+      val m0 = player.play(0, b0, Move.empty)
+      m0 should be (PosMove(1))
+      player.transpositionTable.toList should be (List(
+          (BigInt(12), (1, -1, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(54), (1, -4, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(1234), (2, 3, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(98765432), (3, -4, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt("1234567898765432"), (4, 4, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(9876), (2, 8, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(5432), (2, 4, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(32), (1, -4, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(98), (1, -8, TranspositionTable.EXACT, PosMove(1))),
+          (BigInt(76), (1, -8, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
+          (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new IterativeDeepeningTKPlayer[UniformNode](4, 2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      val m0 = player.play(0, b0, Move.empty)
+      m0 should be (PosMove(0))
+    }
+
+  }
+
 }
 
