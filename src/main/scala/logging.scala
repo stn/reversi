@@ -1,5 +1,6 @@
 package boardgame
 
+import scala.compat.Platform
 
 object Log {
 
@@ -22,14 +23,18 @@ object Log {
 }
 
 
-trait NodeCount {
+trait Benchmark {
 
   var tnodeCount = 0
   var inodeCount = 0
 
-  def initCount() {
+  var startTime = 0L
+  var stopTime = 0L
+
+  def startBenchmark() {
     tnodeCount = 0
     inodeCount = 0
+    startTime = Platform.currentTime
   }
 
   def countTNode() {
@@ -40,8 +45,12 @@ trait NodeCount {
     inodeCount += 1
   }
   
-  def printCount(method: String, maxDepth: Int, ply: Int, time: Long) {
-    Log.d("NodeCount", "%s,%d,%d,%d,%d,%d".format(method, maxDepth, ply, tnodeCount, inodeCount, time))
+  def stopBenchmark() {
+    stopTime = Platform.currentTime
+  }
+
+  def printBenchmark(method: String, data :String) {
+    Log.d("Benchmark", "%s,%s,%d,%d,%d".format(method, data, tnodeCount, inodeCount, stopTime - startTime))
   }
 
 }

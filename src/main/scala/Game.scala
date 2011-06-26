@@ -153,7 +153,14 @@ object Game {
     val player = loadPlayer(playerName)
     player.name = playerName
     val node = readNode(filename)
-    val move = player.play(0, node, Move.empty) // ply = 0 for now
+
+    System.gc()
+    player.startBenchmark()
+    val ply = 0 // for now
+    val move = player.play(ply, node, Move.empty)
+    player.stopBenchmark()
+    player.printBenchmark(playerName, filename)
+
     println(move)
   }
 

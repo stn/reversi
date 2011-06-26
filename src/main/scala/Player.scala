@@ -176,9 +176,11 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
 
   def play(node: N, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
+      countTNode() //C
       printNode(node, score(node)) //V
       return (Move.empty, score(node))
     }
+    countINode() //C
     val moves = node.possibleMoves()
     var bestMove = Move.empty
     var maxS = Int.MinValue
@@ -200,6 +202,7 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
       printNode(node, score(node)) //V
       return score(node)
     }
+    countINode() //C
     val moves = node.possibleMoves()
     var minS = Int.MaxValue
     for (m <- moves) {
@@ -222,11 +225,7 @@ abstract class NegamaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] 
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("MinMax", maxDepth, ply, stopTime - startTime) //C
     printFooter() //V
     m
   }
@@ -269,9 +268,11 @@ abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Pla
 
   def play(node: N, bound: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
+      countTNode() //C
       printNode(node, score(node)) //V
       return (Move.empty, score(node))
     }
+    countINode() //C
     val moves = node.possibleMoves()
     var bestMove = Move.empty
     var maxS = Int.MinValue
@@ -295,9 +296,11 @@ abstract class BranchAndBoundPlayer[N <: Node[N]](val maxDepth: Int) extends Pla
 
   def playOpponent(node: N, bound: Int, depth: Int): Int = {
     if (depth == 0 || node.isTerminal) {
+      countTNode() //C
       printNode(node, score(node)) //V
       return score(node)
     }
+    countINode() //C
     val moves = node.possibleMoves()
     var minS = Int.MaxValue
     for (m <- moves) {
@@ -333,9 +336,11 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
 
   def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
+      countTNode() //C
       printNode(node, score(node)) //V
       return (Move.empty, score(node))
     }
+    countINode() //C
     val moves = node.possibleMoves()
     var bestMove = Move.empty
     var alpha_ = alpha
@@ -359,9 +364,11 @@ abstract class AlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N
 
   def playOpponent(node: N, alpha: Int, beta: Int, depth: Int): Int = {
     if (depth == 0 || node.isTerminal) {
+      countTNode() //C
       printNode(node, score(node)) //V
       return score(node)
     }
+    countINode() //C
     val moves = node.possibleMoves()
     var beta_ = beta
     for (m <- moves) {
@@ -389,11 +396,7 @@ abstract class NegaAlphaBetaPlayer[N <: Node[N]](val maxDepth: Int) extends Play
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("AlphaBeta", maxDepth, ply, stopTime - startTime) //C
     printFooter() //V
     m
   }
@@ -467,11 +470,7 @@ abstract class KillerHeuristicPlayer[N <: Node[N]](val maxDepth: Int, override v
   override def play(ply: Int, node: N, last: Move): Move = {
     initKillerMoves(maxDepth)
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("KillerHeuristic", numKillerMoves, ply, stopTime - startTime) //C
     Log.i("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V
     m
@@ -526,11 +525,7 @@ abstract class KillerHeuristicKeepPlayer[N <: Node[N]](val maxDepth: Int, overri
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(ply, node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("KillerHeuristic (keep)", numKillerMoves, ply, stopTime - startTime) //C
     Log.i("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V
     m
@@ -617,11 +612,7 @@ abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, override val numHi
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initHistory()
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("history", numHistories, ply, stopTime - startTime) //C
     m
   }
 
@@ -723,11 +714,7 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
   override def play(ply: Int, node: N, last: Move): Move = {
     initTranspositionTable()
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("transposition", maxDepth, ply, stopTime - startTime) //C
     Log.d("TranspositionTable", transpositionTable.size.toString)
     printFooter() //V
     m
@@ -739,7 +726,6 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
       printNode(node, score(node)) //V
       return (Move.empty, score(node))
     }
-
     countINode() //C
 
     // check transposition table
@@ -795,11 +781,7 @@ abstract class TranspositionTableKeepPlayer[N <: Node[N]](override val maxDepth:
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("transposition", maxDepth, ply, stopTime - startTime) //C
     Log.d("TranspositionTable", transpositionTable.size.toString)
     printFooter() //V
     m
@@ -814,11 +796,7 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
     initKillerMoves(maxDepth)
     initTranspositionTable()
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("transposition_k", maxDepth, ply, stopTime - startTime) //C
     Log.d("TranspositionTable", transpositionTable.size.toString)
     Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V
@@ -886,12 +864,7 @@ abstract class TranspositionTableWithHistoryPlayer[N <: Node[N]](val maxDepth: I
     initHistory()
     initTranspositionTable()
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("transposition_h", maxDepth, ply, stopTime - startTime) //C
-    printCount("history", numHistories, ply, stopTime - startTime) //C
     printFooter() //V
     m
   }
@@ -971,11 +944,7 @@ abstract class TranspositionTableWithKillerKeepPlayer[N <: Node[N]](
 
   override def play(ply: Int, node: N, last: Move): Move = {
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
-    val stopTime = Platform.currentTime //T
-    printCount("transposition_k_keep", maxDepth, ply, stopTime - startTime) //C
     Log.d("TranspositionTable", transpositionTable.size.toString)
     Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V
@@ -994,8 +963,6 @@ abstract class IterativeDeepeningTKPlayer[N <: Node[N]](
     initKillerMoves(maxDepth)
     initTranspositionTable()
     printHeader() //V
-    initCount() //C
-    val startTime = Platform.currentTime //T
     var m = Move.empty
     var s = 0
     for (d <- 1 to maxDepth) {
@@ -1004,8 +971,6 @@ abstract class IterativeDeepeningTKPlayer[N <: Node[N]](
       s = ret._2
       Log.d("IterativeDeepening", "depth = " + d + ", m = " + m + ", s = " + s)
     }
-    val stopTime = Platform.currentTime //T
-    printCount("iterative_deepening_tk", maxDepth, ply, stopTime - startTime) //C
     Log.d("TranspositionTable", transpositionTable.size.toString)
     Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(","))
     printFooter() //V

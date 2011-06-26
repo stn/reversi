@@ -47,7 +47,7 @@ trait Board {
   def numOfMarkers: Map[Marker, Int]
 }
 
-trait Player[N <: Node[N]] extends NodeCount {
+trait Player[N <: Node[N]] extends Benchmark {
   var marker: Marker = _
   var opponentMarker: Marker = _
   var name: String = ""
