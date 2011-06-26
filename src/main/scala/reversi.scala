@@ -11,6 +11,9 @@ class ReversiNode (
     override val marker: Marker,
     val board: ListBoard
 ) extends Node[ReversiNode] {
+
+  def this(marker: Marker, str: String) =
+      this(marker, ListBoard.fromString(str))
  
   override def play(move: Move): Option[ReversiNode] =
     (move: @unchecked) match {

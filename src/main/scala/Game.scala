@@ -2,6 +2,7 @@ package boardgame
 package reversi
 
 import scala.collection._
+import scala.io.Source
 import scala.util.Random
 
 import boardgame.Marker._
@@ -59,12 +60,23 @@ object Game {
       case "transposition_k6" => new TranspositionTableWithKillerPlayer[ReversiNode](6, 32) with MarkersScore
       case "transposition_h6" => new TranspositionTableWithHistoryPlayer[ReversiNode](6, 128) with MarkersScore
 
-      case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
+      case "iterative_deepening_tk6" => new IterativeDeepeningTKPlayer[ReversiNode](6, 32) with MarkersScore
+
+      //case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
       //case "transposition_k_keep6" => new TranspositionTableWithKillerKeepPlayer[ReversiNode](6, 32) with MarkersScore
     }
 
   def main(originalArgs: Array[String]) {
-    var args = parseOptions(originalArgs.toList)
+    var args = Flags.parseOptions(originalArgs.toList)
+
+    if (Flags.benchmark) {
+      if (args.length < 1) {
+        println("Please specify players")
+        sys.exit(1)
+      }
+      benchmark(args(0), Flags.filename)
+      return
+    }
 
     if (args.length < 2) {
       println("Please specify players")
@@ -93,23 +105,6 @@ object Game {
     }
   }
 
-  def parseOptions(args: List[String]): List[String] =
-    args match {
-        case "-v" :: rest =>
-          Flags.logInfo = true
-          Flags.logDebug = true
-          Flags.logWarning = true
-          parseOptions(rest)
-        case "-n" :: times :: rest =>
-          Flags.numOfGames = times.toInt
-          parseOptions(rest)
-        case "-t" :: rest =>
-          Flags.printTree = true
-          parseOptions(rest)
-        case _ =>
-          args
-      }
-
   def play(player1: Player[ReversiNode], player2: Player[ReversiNode]): Marker = {
     var node = ReversiNode.Start
     var move: Move = Move.empty
@@ -129,7 +124,6 @@ object Game {
         return node.winner
       }
       // player2
-      player2.initCount()
       move = player2.play(ply, node, move)
       ply += 1
       node.play(move) match {
@@ -153,6 +147,31 @@ object Game {
       }
     }
     scoreMap
+  }
+
+  def benchmark(playerName: String, filename: String) {
+    val player = loadPlayer(playerName)
+    player.name = playerName
+    val node = readNode(filename)
+    val move = player.play(0, node, Move.empty) // ply = 0 for now
+    println(move)
+  }
+
+  def readNode(filename: String): ReversiNode = {
+    val source = Source.fromFile(filename)
+    val lines = source.getLines().toList
+    val marker = lines(1) match {
+      case "Black" => Dark
+      case "Black to move" => Dark
+      case "White" => Light
+      case "White to move" => Light
+      case _ => Blank // error!
+    }
+    if (marker == Blank) {
+      printf("error on marker line: " + lines(1))
+      System.exit(1)
+    }
+    new ReversiNode(marker, lines(0))
   }
 
 }

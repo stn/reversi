@@ -5,6 +5,15 @@ import scala.collection.mutable
 import boardgame.Marker._
 
 
+object ListBoard {
+
+  def fromString(str: String): ListBoard = {
+    val list = (str map { case 'X' => Dark case 'O' => Light case _ => Blank }).toList
+    new ListBoard(list)
+  }
+
+}
+
 class ListBoard (
   private val list: List[Marker]
 ) extends Board {
