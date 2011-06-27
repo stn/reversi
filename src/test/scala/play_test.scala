@@ -1151,6 +1151,78 @@ class PlaySpec extends Spec with ShouldMatchers {
 
   describe("ScoutPlayer") {
 
+    it("testGTMax should return true if a score is greater than s (depth = 1)") {
+      val player = new ScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      player.testGTMax(b0, 0, 1) should be (true)
+      player.testGTMax(b0, 1, 1) should be (false)
+      player.testGTMax(b0, 2, 1) should be (false)
+    }
+
+    it("testGTMax should return true if a score is greater than s (depth = 2)") {
+      val player = new ScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("123", Dark, 3)
+      player.testGTMax(b0, 2, 2) should be (true)
+      player.testGTMax(b0, 3, 2) should be (false)
+      player.testGTMax(b0, 4, 2) should be (false)
+    }
+
+    it("testGTMin should return true if a score is greater than s (depth = 1)") {
+      val player = new ScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Light, 3)
+      player.testGTMin(b0, 0, 1) should be (true)
+      player.testGTMin(b0, 1, 1) should be (false)
+      player.testGTMin(b0, 2, 1) should be (false)
+    }
+
+    it("testGTMin should return true if a score is greater than s (depth = 2)") {
+      val player = new ScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("123", Light, 3)
+      player.testGTMin(b0, 0, 1) should be (true)
+      player.testGTMin(b0, 1, 1) should be (false)
+      player.testGTMin(b0, 2, 1) should be (false)
+    }
+
+    it("testLTMax should return true if a score is lesser than s (depth = 1)") {
+      val player = new ScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      player.testLTMax(b0, 0, 1) should be (false)
+      player.testLTMax(b0, 1, 1) should be (false)
+      player.testLTMax(b0, 2, 1) should be (true)
+    }
+
+    it("testLTMax should return true if a score is lesser than s (depth = 2)") {
+      val player = new ScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("123", Dark, 3)
+      player.testLTMax(b0, 2, 2) should be (false)
+      player.testLTMax(b0, 3, 2) should be (false)
+      player.testLTMax(b0, 4, 2) should be (true)
+    }
+
+    it("testLTMin should return true if a score is lesser than s (depth = 1)") {
+      val player = new ScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Light, 3)
+      player.testLTMin(b0, 0, 1) should be (false)
+      player.testLTMin(b0, 1, 1) should be (false)
+      player.testLTMin(b0, 2, 1) should be (true)
+    }
+
+    it("testLTMin should return true if a score is lesser than s (depth = 2)") {
+      val player = new ScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("123", Light, 3)
+      player.testLTMin(b0, 0, 1) should be (false)
+      player.testLTMin(b0, 1, 1) should be (false)
+      player.testLTMin(b0, 2, 1) should be (true)
+    }
+
     it("should return Move.empty for a leaf node.") {
       val player = new ScoutPlayer[UniformNode](2) with UniformScore
       player.init(Dark)
