@@ -199,6 +199,7 @@ abstract class MinmaxPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] w
 
   def playOpponent(node: N, depth: Int): Int = {
     if (depth == 0 || node.isTerminal) {
+      countTNode() //C
       printNode(node, score(node)) //V
       return score(node)
     }
@@ -576,8 +577,6 @@ trait HistoryHeuristic[N <: Node[N]] {
 
   val MIN_DEPTH_FOR_HISTORY = 2
 
-  val numHistories: Int
-
   var historyMoves: mutable.Map[Move, Int] = _
 
   def initHistory() {
@@ -608,7 +607,7 @@ trait HistoryHeuristic[N <: Node[N]] {
 }
 
 
-abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int, override val numHistories: Int) extends Player[N] with HistoryHeuristic[N] {
+abstract class HistoryPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with HistoryHeuristic[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initHistory()
@@ -858,7 +857,7 @@ abstract class TranspositionTableWithKillerPlayer[N <: Node[N]](val maxDepth: In
 }
 
 
-abstract class TranspositionTableWithHistoryPlayer[N <: Node[N]](val maxDepth: Int, override val numHistories: Int) extends Player[N] with VisualizeTree[N] with HistoryHeuristic[N] with TranspositionTable[N] {
+abstract class TranspositionTableWithHistoryPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] with HistoryHeuristic[N] with TranspositionTable[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initHistory()
@@ -976,6 +975,136 @@ abstract class IterativeDeepeningTKPlayer[N <: Node[N]](
     printFooter() //V
     m
   }
+
+}
+
+
+abstract class ScoutPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    printHeader() //V
+    val (m, s) = evalMax(node, maxDepth)
+    printFooter() //V
+    m
+  }
+
+  def evalMax(node: N, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (Move.empty, score(node))
+    }
+    countINode() //C
+    var bestMove = Move.empty
+    var s = Int.MinValue
+    val moves = node.possibleMoves()
+    bestMove = moves.head
+    val n1 = node.play(bestMove).get
+    s = evalMin(n1, depth - 1)._2
+    for (m <- moves.tail) {
+      val n = node.play(m).get
+      if (testGTMin(n, s, depth - 1)) {
+        bestMove = m
+        s = evalMin(n, depth - 1)._2
+      }
+    }
+    printNode(node, s) //V
+    (bestMove, s)
+  }
+
+  def testGTMin(node: N, s: Int, depth: Int): Boolean = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (score(node) > s)
+    }
+    countINode() //C
+    val moves = node.possibleMoves()
+    for (m <- moves) {
+      val n = node.play(m).get
+      if (!testGTMax(n, s, depth - 1)) {
+        return false
+      }
+    }
+    true
+  }
+
+  def testGTMax(node: N, s: Int, depth: Int): Boolean = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (score(node) > s)
+    }
+    countINode() //C
+    val moves = node.possibleMoves()
+    for (m <- moves) {
+      val n = node.play(m).get
+      if (testGTMin(n, s, depth - 1)) {
+        return true
+      }
+    }
+    false
+  }
+
+  def evalMin(node: N, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (Move.empty, score(node))
+    }
+    countINode() //C
+    var bestMove = Move.empty
+    var s = Int.MaxValue
+    val moves = node.possibleMoves()
+    bestMove = moves.head
+    val n1 = node.play(bestMove).get
+    s = evalMax(n1, depth - 1)._2
+    for (m <- moves.tail) {
+      val n = node.play(m).get
+      if (testLTMax(n, s, depth - 1)) {
+        bestMove = m
+        s = evalMax(n, depth - 1)._2
+      }
+    }
+    printNode(node, s) //V
+    (bestMove, s)
+  }
+
+  def testLTMax(node: N, s: Int, depth: Int): Boolean = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (score(node) < s)
+    }
+    countINode() //C
+    val moves = node.possibleMoves()
+    for (m <- moves) {
+      val n = node.play(m).get
+      if (!testLTMin(n, s, depth - 1)) {
+        return false
+      }
+    }
+    true
+  }
+
+  def testLTMin(node: N, s: Int, depth: Int): Boolean = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (score(node) < s)
+    }
+    countINode() //C
+    val moves = node.possibleMoves()
+    for (m <- moves) {
+      val n = node.play(m).get
+      if (testLTMax(n, s, depth - 1)) {
+        return true
+      }
+    }
+    false
+  }
+
+  def score(node: N): Int
 
 }
 

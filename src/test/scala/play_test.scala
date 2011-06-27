@@ -468,9 +468,7 @@ class PlaySpec extends Spec with ShouldMatchers {
 
   describe("HistoryHeuristic") {
 
-    class HH extends HistoryHeuristic[UniformNode] {
-      override val numHistories = 2
-    }
+    class HH extends HistoryHeuristic[UniformNode]
 
     it("should initialize history moves") {
       val hh = new HH
@@ -508,7 +506,7 @@ class PlaySpec extends Spec with ShouldMatchers {
   describe("HistoryPlayer") {
 
     it("should return Move.empty for a leaf node.") {
-      val player = new HistoryPlayer[UniformNode](2, 2) with UniformScore
+      val player = new HistoryPlayer[UniformNode](2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("1", Dark, 3)
       player.initHistory
@@ -519,7 +517,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return the max value of 1-depth tree.") {
-      val player = new HistoryPlayer[UniformNode](1, 2) with UniformScore
+      val player = new HistoryPlayer[UniformNode](1) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314", Dark, 3)
       player.initHistory
@@ -530,7 +528,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value.") {
-      val player = new HistoryPlayer[UniformNode](2, 2) with UniformScore
+      val player = new HistoryPlayer[UniformNode](2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("324159870", Dark, 3)
       player.initHistory
@@ -541,7 +539,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value for 3-depth tree.") {
-      val player = new HistoryPlayer[UniformNode](3, 2) with UniformScore
+      val player = new HistoryPlayer[UniformNode](3) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("01234567", Dark, 2)
       player.initHistory
@@ -552,7 +550,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value for 4-depth tree.") {
-      val player = new HistoryPlayer[UniformNode](4, 2) with UniformScore
+      val player = new HistoryPlayer[UniformNode](4) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("0123456789876543", Dark, 2)
       player.initHistory
@@ -563,7 +561,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return 2 for pi-game.") {
-      val player = new HistoryPlayer[UniformNode](4, 2) with UniformScore
+      val player = new HistoryPlayer[UniformNode](4) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
       player.initHistory
@@ -880,7 +878,7 @@ class PlaySpec extends Spec with ShouldMatchers {
   describe("TranspositionTableWithHistoryPlayer") {
 
     it("should return Move.empty for a leaf node.") {
-      val player = new TranspositionTableWithHistoryPlayer[UniformNode](2, 2) with UniformScore
+      val player = new TranspositionTableWithHistoryPlayer[UniformNode](2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("1", Dark, 3)
       player.initHistory()
@@ -892,7 +890,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return the max value of 1-depth tree.") {
-      val player = new TranspositionTableWithHistoryPlayer[UniformNode](1, 2) with UniformScore
+      val player = new TranspositionTableWithHistoryPlayer[UniformNode](1) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314", Dark, 3)
       player.initHistory()
@@ -905,7 +903,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value.") {
-      val player = new TranspositionTableWithHistoryPlayer[UniformNode](2, 2) with UniformScore
+      val player = new TranspositionTableWithHistoryPlayer[UniformNode](2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("324159870", Dark, 3)
       player.initHistory()
@@ -921,7 +919,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value for 3-depth tree.") {
-      val player = new TranspositionTableWithHistoryPlayer[UniformNode](3, 2) with UniformScore
+      val player = new TranspositionTableWithHistoryPlayer[UniformNode](3) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("12345678", Dark, 2)
       player.initHistory()
@@ -938,7 +936,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value for 4-depth tree.") {
-      val player = new TranspositionTableWithHistoryPlayer[UniformNode](4, 2) with UniformScore
+      val player = new TranspositionTableWithHistoryPlayer[UniformNode](4) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("1234567898765432", Dark, 2)
       player.initHistory()
@@ -961,7 +959,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return 2 for pi-game.") {
-      val player = new TranspositionTableWithHistoryPlayer[UniformNode](4, 2) with UniformScore
+      val player = new TranspositionTableWithHistoryPlayer[UniformNode](4) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
       player.initHistory()
@@ -1147,6 +1145,64 @@ class PlaySpec extends Spec with ShouldMatchers {
       val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
       val m0 = player.play(0, b0, Move.empty)
       m0 should be (PosMove(0))
+    }
+
+  }
+
+  describe("ScoutPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new ScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      val (m0, s0) = player.evalMax(b0, 2)
+      m0 should be (Move.empty)
+      s0 should be (1)
+    }
+
+    it("should return the max value of 1-depth tree.") {
+      val player = new ScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314", Dark, 3)
+      val (m0, s0) = player.evalMax(b0, 1)
+      m0 should be (PosMove(2))
+      s0 should be (4)
+    }
+
+    it("should return a min max value.") {
+      val player = new ScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("324159870", Dark, 3)
+      val (m0, s0) = player.evalMax(b0, 2)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+    }
+
+    it("should return a min max value for 3-depth tree.") {
+      val player = new ScoutPlayer[UniformNode](3) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("01234567", Dark, 2)
+      val (m0, s0) = player.evalMax(b0, 3)
+      m0 should be (PosMove(1))
+      s0 should be (5)
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new ScoutPlayer[UniformNode](4) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("0123456789876543", Dark, 2)
+      val (m0, s0) = player.evalMax(b0, 4)
+      m0 should be (PosMove(1))
+      s0 should be (5)
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new ScoutPlayer[UniformNode](4) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      val (m0, s0) = player.evalMax(b0, 4)
+      m0 should be (PosMove(0))
+      s0 should be (2)
     }
 
   }
