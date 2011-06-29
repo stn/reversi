@@ -1279,5 +1279,133 @@ class PlaySpec extends Spec with ShouldMatchers {
 
   }
 
+  describe("NegaScoutPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new NegaScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 2)
+      m0 should be (Move.empty)
+      s0 should be (1)
+      player.tnodeCount should be (1)
+      player.inodeCount should be (0)
+    }
+
+    it("should return the max value of 1-depth tree.") {
+      val player = new NegaScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 1)
+      m0 should be (PosMove(1))
+      s0 should be (-1)
+      player.tnodeCount should be (3)
+      player.inodeCount should be (1)
+    }
+
+    it("should cut by beta.") {
+      val player = new NegaScoutPlayer[UniformNode](1) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("531", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, -4, 1)
+      m0 should be (PosMove(1))
+      s0 should be (-3)
+      player.tnodeCount should be (2)
+      player.inodeCount should be (1)
+
+      player.startBenchmark()
+      val (m1, s1) = player.play(b0, Int.MinValue + 1, -3, 1)
+      m1 should be (PosMove(1))
+      s1 should be (-3)
+      player.tnodeCount should be (2)
+      player.inodeCount should be (1)
+    }
+
+    it("should cut by alpha.") {
+      val player = new NegaScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      player.startBenchmark()
+      val b0 = new UniformNode("536000000", Dark, 3)
+      val (m0, s0) = player.play(b0, 4, Int.MaxValue, 2)
+      m0 should be (PosMove(0))
+      s0 should be (3)
+      player.tnodeCount should be (4)
+      player.inodeCount should be (4)
+    }
+
+    it("should return a min max value.") {
+      val player = new NegaScoutPlayer[UniformNode](2) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("324159870", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 2)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+      player.tnodeCount should be (7)
+      player.inodeCount should be (4)
+    }
+
+    it("should return a min max value for 3-depth tree.") {
+      val player = new NegaScoutPlayer[UniformNode](3) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("01234567", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 3)
+      m0 should be (PosMove(0))
+      s0 should be (-2)
+      player.tnodeCount should be (6)
+      player.inodeCount should be (6) // right?
+    }
+
+    it("should return a min max value for 3-depth tree (reverse).") {
+      val player = new NegaScoutPlayer[UniformNode](3) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("76543210", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 3)
+      m0 should be (PosMove(1))
+      s0 should be (-2)
+      player.tnodeCount should be (8)
+      player.inodeCount should be (10) // right?
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new NegaScoutPlayer[UniformNode](4) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("0123456789876543", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 4)
+      m0 should be (PosMove(1))
+      s0 should be (5)
+      player.tnodeCount should be (18) // right?
+      player.inodeCount should be (22)
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new NegaScoutPlayer[UniformNode](4) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 4)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+    }
+
+    it("should return 2 for minimal negascout tree.") {
+      val player = new NegaScoutPlayer[UniformNode](3) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("45392955", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.play(b0, Int.MinValue + 1, Int.MaxValue, 3)
+      m0 should be (PosMove(0))
+      s0 should be (-4)
+      player.tnodeCount should be (6)
+      player.inodeCount should be (7)
+    }
+
+  }
+
 }
 

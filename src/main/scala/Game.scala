@@ -37,6 +37,10 @@ object Game {
       case "negaalpha4" => new NegaAlphaBetaPlayer[ReversiNode](4) with MarkersScore
       case "negaalpha5" => new NegaAlphaBetaPlayer[ReversiNode](5) with MarkersScore
       case "negaalpha6" => new NegaAlphaBetaPlayer[ReversiNode](6) with MarkersScore
+      case "negaalpha7" => new NegaAlphaBetaPlayer[ReversiNode](7) with MarkersScore
+      case "negaalpha8" => new NegaAlphaBetaPlayer[ReversiNode](8) with MarkersScore
+      case "negaalpha9" => new NegaAlphaBetaPlayer[ReversiNode](9) with MarkersScore
+      case "negaalpha10" => new NegaAlphaBetaPlayer[ReversiNode](10) with MarkersScore
 
       case "killer2_1" => new KillerHeuristicPlayer[ReversiNode](2, 1) with MarkersScore
       case "killer3_1" => new KillerHeuristicPlayer[ReversiNode](3, 1) with MarkersScore
@@ -93,6 +97,12 @@ object Game {
       case "scout8" => new ScoutPlayer[ReversiNode](8) with MarkersScore
       case "scout9" => new ScoutPlayer[ReversiNode](9) with MarkersScore
       case "scout10" => new ScoutPlayer[ReversiNode](10) with MarkersScore
+
+      case "negascout6" => new NegaScoutPlayer[ReversiNode](6) with MarkersScore
+      case "negascout7" => new NegaScoutPlayer[ReversiNode](7) with MarkersScore
+      case "negascout8" => new NegaScoutPlayer[ReversiNode](8) with MarkersScore
+      case "negascout9" => new NegaScoutPlayer[ReversiNode](9) with MarkersScore
+      case "negascout10" => new NegaScoutPlayer[ReversiNode](10) with MarkersScore
 
       //case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
       //case "transposition_k_keep6" => new TranspositionTableWithKillerKeepPlayer[ReversiNode](6, 32) with MarkersScore

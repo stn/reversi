@@ -142,21 +142,21 @@ trait VisualizeTree[N <: Node[N]] {
   
   def printEdge(n1: N, n2: N, m: Move) {
     if (Flags.printTree) {
-      println("%d->%d [label=\"%s\"]".format(n1.hashCode, n2.hashCode, m.toString))
+      println("%d->%d [label=\"%s\"]".format(n1.toSignature, n2.toSignature, m.toString))
     }
   }
 
   def printNode(n: N, score: Int) {
     if (Flags.printTree) {
       val color = if (n.marker == Dark) "0000cd" else "ff0000"
-      println(n.hashCode +
+      println(n.toSignature +
           "[fontcolor=\"#%s\", label=\"%d\\n%s\"]".format(color, score, n.toString.replaceAll("\n", "\\\\n")))
     }
   }
   
   def printCutEdge(n1: N) {
     if (Flags.printTree) {
-      println("%d->cut%d".format(n1.hashCode, cutNode))
+      println("%d->cut%d".format(n1.toSignature, cutNode))
       println("cut%d [label=\"/\\n\\n\\n\\n\\n\\n\\n\\n\\n\"]".format(cutNode))
       cutNode += 1
     }
@@ -1102,6 +1102,54 @@ abstract class ScoutPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] wi
       }
     }
     false
+  }
+
+  def score(node: N): Int
+
+}
+
+abstract class NegaScoutPlayer[N <: Node[N]](val maxDepth: Int) extends Player[N] with VisualizeTree[N] {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    printHeader() //V
+    val (m, s) = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+    printFooter() //V
+    m
+  }
+
+  def play(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (Move.empty, score(node))
+    }
+    countINode() //C
+    val moves = node.possibleMoves()
+    var bestMove = Move.empty
+    var alpha_ = Int.MinValue + 1
+    var beta_ = beta
+    for (m <- moves) {
+      val n = node.play(m).get
+      printEdge(node, n, m) //V
+      val (_, s) = play(n, -beta_, -(alpha_ max alpha), depth - 1)
+      if (-s > alpha_) {
+        if (beta_ == beta || depth <= 2) {
+          alpha_ = -s
+        } else {
+          val (_, s2) = play(n, -beta, s, depth - 1)
+          alpha_ = -s2
+        }
+        bestMove = m
+      }
+      if (alpha_ >= beta) { // beta cut
+        printCutEdge(node) //V
+        printNode(node, alpha_) //V
+        return (m, alpha_)
+      }
+      beta_ = (alpha_ max alpha) + 1
+    }
+    printNode(node, alpha_) //V
+    (bestMove, alpha_)
   }
 
   def score(node: N): Int
