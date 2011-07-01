@@ -54,14 +54,18 @@ object Game {
       case "killer6_32" => new KillerHeuristicPlayer[ReversiNode](6, 32) with MarkersScore
       case "killer7_32" => new KillerHeuristicPlayer[ReversiNode](7, 32) with MarkersScore
       case "killer8_32" => new KillerHeuristicPlayer[ReversiNode](8, 32) with MarkersScore
-      case "killer9_32" => new KillerHeuristicPlayer[ReversiNode](8, 32) with MarkersScore
-      case "killer10_32" => new KillerHeuristicPlayer[ReversiNode](8, 32) with MarkersScore
+      case "killer9_32" => new KillerHeuristicPlayer[ReversiNode](9, 32) with MarkersScore
+      case "killer10_32" => new KillerHeuristicPlayer[ReversiNode](10, 32) with MarkersScore
       case "killer6_64" => new KillerHeuristicPlayer[ReversiNode](6, 64) with MarkersScore
       case "killer6_128" => new KillerHeuristicPlayer[ReversiNode](6, 128) with MarkersScore
 
       case "killer_keep6_32" => new KillerHeuristicKeepPlayer[ReversiNode](6, 32) with MarkersScore
 
 
+      case "history2" => new HistoryPlayer[ReversiNode](2) with MarkersScore
+      case "history3" => new HistoryPlayer[ReversiNode](3) with MarkersScore
+      case "history4" => new HistoryPlayer[ReversiNode](4) with MarkersScore
+      case "history5" => new HistoryPlayer[ReversiNode](5) with MarkersScore
       case "history6" => new HistoryPlayer[ReversiNode](6) with MarkersScore
       case "history7" => new HistoryPlayer[ReversiNode](7) with MarkersScore
       case "history8" => new HistoryPlayer[ReversiNode](8) with MarkersScore
@@ -92,12 +96,20 @@ object Game {
       case "iterative_deepening_tk9" => new IterativeDeepeningTKPlayer[ReversiNode](9, 32) with MarkersScore
       case "iterative_deepening_tk10" => new IterativeDeepeningTKPlayer[ReversiNode](10, 32) with MarkersScore
 
+      case "scout2" => new ScoutPlayer[ReversiNode](2) with MarkersScore
+      case "scout3" => new ScoutPlayer[ReversiNode](3) with MarkersScore
+      case "scout4" => new ScoutPlayer[ReversiNode](4) with MarkersScore
+      case "scout5" => new ScoutPlayer[ReversiNode](5) with MarkersScore
       case "scout6" => new ScoutPlayer[ReversiNode](6) with MarkersScore
       case "scout7" => new ScoutPlayer[ReversiNode](7) with MarkersScore
       case "scout8" => new ScoutPlayer[ReversiNode](8) with MarkersScore
       case "scout9" => new ScoutPlayer[ReversiNode](9) with MarkersScore
       case "scout10" => new ScoutPlayer[ReversiNode](10) with MarkersScore
 
+      case "negascout2" => new NegaScoutPlayer[ReversiNode](2) with MarkersScore
+      case "negascout3" => new NegaScoutPlayer[ReversiNode](3) with MarkersScore
+      case "negascout4" => new NegaScoutPlayer[ReversiNode](4) with MarkersScore
+      case "negascout5" => new NegaScoutPlayer[ReversiNode](5) with MarkersScore
       case "negascout6" => new NegaScoutPlayer[ReversiNode](6) with MarkersScore
       case "negascout7" => new NegaScoutPlayer[ReversiNode](7) with MarkersScore
       case "negascout8" => new NegaScoutPlayer[ReversiNode](8) with MarkersScore
