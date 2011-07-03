@@ -32,6 +32,7 @@ object Game {
       case "bab2" => new BranchAndBoundPlayer[ReversiNode](2) with MarkersScore
       case "bab3" => new BranchAndBoundPlayer[ReversiNode](3) with MarkersScore
       case "bab4" => new BranchAndBoundPlayer[ReversiNode](4) with MarkersScore
+
       case "negaalpha2" => new NegaAlphaBetaPlayer[ReversiNode](2) with MarkersScore
       case "negaalpha3" => new NegaAlphaBetaPlayer[ReversiNode](3) with MarkersScore
       case "negaalpha4" => new NegaAlphaBetaPlayer[ReversiNode](4) with MarkersScore
@@ -51,6 +52,10 @@ object Game {
       case "killer6_4" => new KillerHeuristicPlayer[ReversiNode](6, 4) with MarkersScore
       case "killer6_8" => new KillerHeuristicPlayer[ReversiNode](6, 8) with MarkersScore
       case "killer6_16" => new KillerHeuristicPlayer[ReversiNode](6, 16) with MarkersScore
+      case "killer2_32" => new KillerHeuristicPlayer[ReversiNode](2, 32) with MarkersScore
+      case "killer3_32" => new KillerHeuristicPlayer[ReversiNode](3, 32) with MarkersScore
+      case "killer4_32" => new KillerHeuristicPlayer[ReversiNode](4, 32) with MarkersScore
+      case "killer5_32" => new KillerHeuristicPlayer[ReversiNode](5, 32) with MarkersScore
       case "killer6_32" => new KillerHeuristicPlayer[ReversiNode](6, 32) with MarkersScore
       case "killer7_32" => new KillerHeuristicPlayer[ReversiNode](7, 32) with MarkersScore
       case "killer8_32" => new KillerHeuristicPlayer[ReversiNode](8, 32) with MarkersScore
@@ -72,18 +77,30 @@ object Game {
       case "history9" => new HistoryPlayer[ReversiNode](9) with MarkersScore
       case "history10" => new HistoryPlayer[ReversiNode](10) with MarkersScore
 
+      case "transposition2" => new TranspositionTablePlayer[ReversiNode](2) with MarkersScore
+      case "transposition3" => new TranspositionTablePlayer[ReversiNode](3) with MarkersScore
+      case "transposition4" => new TranspositionTablePlayer[ReversiNode](4) with MarkersScore
+      case "transposition5" => new TranspositionTablePlayer[ReversiNode](5) with MarkersScore
       case "transposition6" => new TranspositionTablePlayer[ReversiNode](6) with MarkersScore
       case "transposition7" => new TranspositionTablePlayer[ReversiNode](7) with MarkersScore
       case "transposition8" => new TranspositionTablePlayer[ReversiNode](8) with MarkersScore
       case "transposition9" => new TranspositionTablePlayer[ReversiNode](9) with MarkersScore
       case "transposition10" => new TranspositionTablePlayer[ReversiNode](10) with MarkersScore
       
+      case "transposition_k2" => new TranspositionTableWithKillerPlayer[ReversiNode](2, 32) with MarkersScore
+      case "transposition_k3" => new TranspositionTableWithKillerPlayer[ReversiNode](3, 32) with MarkersScore
+      case "transposition_k4" => new TranspositionTableWithKillerPlayer[ReversiNode](4, 32) with MarkersScore
+      case "transposition_k5" => new TranspositionTableWithKillerPlayer[ReversiNode](5, 32) with MarkersScore
       case "transposition_k6" => new TranspositionTableWithKillerPlayer[ReversiNode](6, 32) with MarkersScore
       case "transposition_k7" => new TranspositionTableWithKillerPlayer[ReversiNode](7, 32) with MarkersScore
       case "transposition_k8" => new TranspositionTableWithKillerPlayer[ReversiNode](8, 32) with MarkersScore
       case "transposition_k9" => new TranspositionTableWithKillerPlayer[ReversiNode](9, 32) with MarkersScore
       case "transposition_k10" => new TranspositionTableWithKillerPlayer[ReversiNode](10, 32) with MarkersScore
       
+      case "transposition_h2" => new TranspositionTableWithHistoryPlayer[ReversiNode](2) with MarkersScore
+      case "transposition_h3" => new TranspositionTableWithHistoryPlayer[ReversiNode](3) with MarkersScore
+      case "transposition_h4" => new TranspositionTableWithHistoryPlayer[ReversiNode](4) with MarkersScore
+      case "transposition_h5" => new TranspositionTableWithHistoryPlayer[ReversiNode](5) with MarkersScore
       case "transposition_h6" => new TranspositionTableWithHistoryPlayer[ReversiNode](6) with MarkersScore
       case "transposition_h7" => new TranspositionTableWithHistoryPlayer[ReversiNode](7) with MarkersScore
       case "transposition_h8" => new TranspositionTableWithHistoryPlayer[ReversiNode](8) with MarkersScore
