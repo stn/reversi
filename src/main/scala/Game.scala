@@ -133,6 +133,36 @@ object Game {
       case "negascout9" => new NegaScoutPlayer[ReversiNode](9) with MarkersScore
       case "negascout10" => new NegaScoutPlayer[ReversiNode](10) with MarkersScore
 
+      case "negascout_k2" => new NegaScoutKPlayer[ReversiNode](2, 32) with MarkersScore
+      case "negascout_k3" => new NegaScoutKPlayer[ReversiNode](3, 32) with MarkersScore
+      case "negascout_k4" => new NegaScoutKPlayer[ReversiNode](4, 32) with MarkersScore
+      case "negascout_k5" => new NegaScoutKPlayer[ReversiNode](5, 32) with MarkersScore
+      case "negascout_k6" => new NegaScoutKPlayer[ReversiNode](6, 32) with MarkersScore
+      case "negascout_k7" => new NegaScoutKPlayer[ReversiNode](7, 32) with MarkersScore
+      case "negascout_k8" => new NegaScoutKPlayer[ReversiNode](8, 32) with MarkersScore
+      case "negascout_k9" => new NegaScoutKPlayer[ReversiNode](9, 32) with MarkersScore
+      case "negascout_k10" => new NegaScoutKPlayer[ReversiNode](10, 32) with MarkersScore
+
+      case "negascout_t2" => new NegaScoutTPlayer[ReversiNode](2) with MarkersScore
+      case "negascout_t3" => new NegaScoutTPlayer[ReversiNode](3) with MarkersScore
+      case "negascout_t4" => new NegaScoutTPlayer[ReversiNode](4) with MarkersScore
+      case "negascout_t5" => new NegaScoutTPlayer[ReversiNode](5) with MarkersScore
+      case "negascout_t6" => new NegaScoutTPlayer[ReversiNode](6) with MarkersScore
+      case "negascout_t7" => new NegaScoutTPlayer[ReversiNode](7) with MarkersScore
+      case "negascout_t8" => new NegaScoutTPlayer[ReversiNode](8) with MarkersScore
+      case "negascout_t9" => new NegaScoutTPlayer[ReversiNode](9) with MarkersScore
+      case "negascout_t10" => new NegaScoutTPlayer[ReversiNode](10) with MarkersScore
+
+      case "negascout_kt2" => new NegaScoutKTPlayer[ReversiNode](2, 32) with MarkersScore
+      case "negascout_kt3" => new NegaScoutKTPlayer[ReversiNode](3, 32) with MarkersScore
+      case "negascout_kt4" => new NegaScoutKTPlayer[ReversiNode](4, 32) with MarkersScore
+      case "negascout_kt5" => new NegaScoutKTPlayer[ReversiNode](5, 32) with MarkersScore
+      case "negascout_kt6" => new NegaScoutKTPlayer[ReversiNode](6, 32) with MarkersScore
+      case "negascout_kt7" => new NegaScoutKTPlayer[ReversiNode](7, 32) with MarkersScore
+      case "negascout_kt8" => new NegaScoutKTPlayer[ReversiNode](8, 32) with MarkersScore
+      case "negascout_kt9" => new NegaScoutKTPlayer[ReversiNode](9, 32) with MarkersScore
+      case "negascout_kt10" => new NegaScoutKTPlayer[ReversiNode](10, 32) with MarkersScore
+
       //case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
       //case "transposition_k_keep6" => new TranspositionTableWithKillerKeepPlayer[ReversiNode](6, 32) with MarkersScore
     }
