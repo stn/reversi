@@ -624,7 +624,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       tt.probeNode(n1, 4, 2, Int.MaxValue) should be ((PosMove(3), 2))
       val n2 = new UniformNode("2", Dark, 5)
       tt.recordNode(n2, 4, 1, TranspositionTable.ALPHA, PosMove(0))
-      tt.probeNode(n2, 4, 2, Int.MaxValue) should be ((PosMove(0), 2))
+      tt.probeNode(n2, 4, 2, Int.MaxValue) should be ((PosMove(0), 1))
       val n3 = new UniformNode("3", Dark, 5)
       tt.recordNode(n3, 4, 1, TranspositionTable.ALPHA, PosMove(1))
       tt.probeNode(n3, 4, 0, Int.MaxValue) should be ((PosMove(1), TranspositionTable.UNKNOWN))
@@ -638,7 +638,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       tt.probeNode(n1, 4, Int.MinValue + 1, 2) should be ((PosMove(3), 2))
       val n2 = new UniformNode("23456", Dark, 5)
       tt.recordNode(n2, 4, 3, TranspositionTable.BETA, PosMove(0))
-      tt.probeNode(n2, 4, Int.MinValue + 1, 2) should be ((PosMove(0), 2))
+      tt.probeNode(n2, 4, Int.MinValue + 1, 2) should be ((PosMove(0), 3))
       val n3 = new UniformNode("34567", Dark, 5)
       tt.recordNode(n3, 4, 1, TranspositionTable.BETA, PosMove(1))
       tt.probeNode(n3, 4, Int.MinValue + 1, 5) should be ((PosMove(1), TranspositionTable.UNKNOWN))
@@ -720,9 +720,9 @@ class PlaySpec extends Spec with ShouldMatchers {
       s0 should be (2)
       player.transpositionTable.toList should be (List(
           (BigInt(324159870), (2, 2, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(159), (1, -2, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(159), (1, -1, TranspositionTable.BETA, PosMove(0))),
           (BigInt(324), (1, -2, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(870), (1, -2, TranspositionTable.BETA, PosMove(2)))))
+          (BigInt(870), (1,  0, TranspositionTable.BETA, PosMove(2)))))
     }
 
     it("should return a min max value for 3-depth tree.") {
@@ -758,9 +758,9 @@ class PlaySpec extends Spec with ShouldMatchers {
           (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
           (BigInt(9876), (2, 8, TranspositionTable.EXACT, PosMove(0))),
           (BigInt(5432), (2, 4, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(32), (1, -4, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(32), (1, -3, TranspositionTable.BETA, PosMove(0))),
           (BigInt(98), (1, -8, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(76), (1, -8, TranspositionTable.BETA, PosMove(0))),
+          (BigInt(76), (1, -7, TranspositionTable.BETA, PosMove(0))),
           (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
           (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
     }
@@ -1827,6 +1827,119 @@ class PlaySpec extends Spec with ShouldMatchers {
       s0 should be (-4)
       player.tnodeCount should be (6)
       player.inodeCount should be (7)
+    }
+
+  }
+
+  describe("MTDfPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new MTDfPlayer[UniformNode](2, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("1", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 2)
+      m0 should be (Move.empty)
+      s0 should be (1)
+      player.tnodeCount should be (2)
+      player.inodeCount should be (0)
+    }
+
+    it("should return the max value of 1-depth tree.") {
+      val player = new MTDfPlayer[UniformNode](1, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("314", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 1)
+      m0 should be (PosMove(1))
+      s0 should be (-1)
+      player.tnodeCount should be (4)
+      player.inodeCount should be (2)
+    }
+
+    it("should return a min max value.") {
+      val player = new MTDfPlayer[UniformNode](2, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("324159870", Dark, 3)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 2)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+      player.tnodeCount should be (9)
+      player.inodeCount should be (7)
+    }
+
+    it("should return a min max value for 3-depth tree.") {
+      val player = new MTDfPlayer[UniformNode](3, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("01234567", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 3)
+      m0 should be (PosMove(0))
+      s0 should be (-2)
+      player.tnodeCount should be (6)
+      player.inodeCount should be (13) // right?
+    }
+
+    it("should return a min max value for 3-depth tree (reverse).") {
+      val player = new MTDfPlayer[UniformNode](3, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("76543210", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 3)
+      m0 should be (PosMove(1))
+      s0 should be (-2)
+      player.tnodeCount should be (6)
+      player.inodeCount should be (13) // right?
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new MTDfPlayer[UniformNode](4, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("0123456789876543", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 4)
+      //m0 should be (PosMove(1))
+      s0 should be (5)
+      player.tnodeCount should be (26) // right?
+      player.inodeCount should be (58)
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new MTDfPlayer[UniformNode](4, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      val (m0, s0) = player.mtd(b0, 0, 4)
+      m0 should be (PosMove(0))
+      s0 should be (2)
+    }
+
+    it("should return 2 for minimal negascout tree.") {
+      val player = new MTDfPlayer[UniformNode](3, 32) with UniformScore
+      player.init(Dark)
+      player.initKillerMoves(32)
+      player.initTranspositionTable()
+      val b0 = new UniformNode("45392955", Dark, 2)
+      player.startBenchmark()
+      val (m0, s0) = player.mtd(b0, 0, 3)
+      m0 should be (PosMove(0))
+      s0 should be (-4)
+      player.tnodeCount should be (10)
+      player.inodeCount should be (22)
     }
 
   }

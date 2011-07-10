@@ -163,6 +163,16 @@ object Game {
       case "negascout_kt9" => new NegaScoutKTPlayer[ReversiNode](9, 32) with MarkersScore
       case "negascout_kt10" => new NegaScoutKTPlayer[ReversiNode](10, 32) with MarkersScore
 
+      case "mtdf2" => new MTDfPlayer[ReversiNode](2, 32) with MarkersScore
+      case "mtdf3" => new MTDfPlayer[ReversiNode](3, 32) with MarkersScore
+      case "mtdf4" => new MTDfPlayer[ReversiNode](4, 32) with MarkersScore
+      case "mtdf5" => new MTDfPlayer[ReversiNode](5, 32) with MarkersScore
+      case "mtdf6" => new MTDfPlayer[ReversiNode](6, 32) with MarkersScore
+      case "mtdf7" => new MTDfPlayer[ReversiNode](7, 32) with MarkersScore
+      case "mtdf8" => new MTDfPlayer[ReversiNode](8, 32) with MarkersScore
+      case "mtdf9" => new MTDfPlayer[ReversiNode](9, 32) with MarkersScore
+      case "mtdf10" => new MTDfPlayer[ReversiNode](10, 32) with MarkersScore
+
       //case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
       //case "transposition_k_keep6" => new TranspositionTableWithKillerKeepPlayer[ReversiNode](6, 32) with MarkersScore
     }

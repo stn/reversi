@@ -681,10 +681,10 @@ trait TranspositionTable[N <: Node[N]] {
           return (best, score)
         } else if (flag == TranspositionTable.ALPHA) {
           if (score <= alpha)
-            return (best, alpha)
+            return (best, score)
         } else if (flag == TranspositionTable.BETA) {
           if (score >= beta)
-            return (best, beta)
+            return (best, score)
         }
       }
       return (best, TranspositionTable.UNKNOWN)
@@ -748,7 +748,7 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
       if (-s >= beta) {
         printCutEdge(node) //V
         // record the node into transposition table
-        recordNode(node, depth, beta, TranspositionTable.BETA, m)
+        recordNode(node, depth, -s, TranspositionTable.BETA, m)
         return (m, beta)
       }
       if (-s > alpha_) {
@@ -762,7 +762,7 @@ abstract class TranspositionTablePlayer[N <: Node[N]](val maxDepth: Int) extends
     if (alpha_ > alpha)
       recordNode(node, depth, alpha_, TranspositionTable.EXACT, bestMove)
     else
-      recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
+      recordNode(node, depth, alpha_, TranspositionTable.ALPHA, bestMove)
 
     (bestMove, alpha_)
   }
@@ -1358,6 +1358,91 @@ abstract class NegaScoutKTPlayer[N <: Node[N]](val maxDepth: Int, override val n
       recordNode(node, depth, alpha, TranspositionTable.ALPHA, bestMove)
 
     (bestMove, alpha_)
+  }
+
+  def score(node: N): Int
+
+}
+
+
+abstract class MTDfPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with KillerHeuristic[N] with TranspositionTable[N] with VisualizeTree[N] {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    initKillerMoves(maxDepth) //K
+    initTranspositionTable() //T
+    printHeader() //V
+    val (m, s) = mtd(node, 0, maxDepth)
+    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(",")) //K
+    Log.d("TranspositionTable", transpositionTable.size.toString) //T
+    printFooter() //V
+    m
+  }
+
+  def mtd(node: N, f: Int, depth: Int): (Move, Int) = {
+    var g = f
+    var bestMove = Move.empty
+    var upper = Int.MaxValue
+    var lower = Int.MinValue + 1
+    while (lower < upper) {
+      val bound = if (g == lower) g + 1 else g
+      val (m, s) = mt(node, bound, depth)
+      g = s
+      bestMove = m
+      if (g < bound) {
+        upper = g
+      } else {
+        lower = g
+      }
+    }
+    return (bestMove, g)
+  }
+
+  def mt(node: N, gamma: Int, depth: Int): (Move, Int) = {
+    if (depth == 0 || node.isTerminal) {
+      countTNode() //C
+      printNode(node, score(node)) //V
+      return (Move.empty, score(node))
+    }
+    countINode() //C
+
+    // check transposition table
+    val (recordedMove, recordedScore) = probeNode(node, depth, gamma - 1, gamma)
+    if (recordedScore != TranspositionTable.UNKNOWN)
+      return (recordedMove, recordedScore)
+    
+    var moves = node.possibleMoves().toList
+
+    // use killer moves
+    moves = reorderByKillerMoves(depth - 1, moves)
+
+    // use the recorded move if it is available
+    if (recordedMove != Move.empty && (moves contains recordedMove)) {
+      moves = recordedMove :: (moves filterNot {_ == recordedMove})
+    }
+
+    var bestMove = Move.empty
+    var g = Int.MinValue + 1
+    for (m <- moves) {
+      val n = node.play(m).get
+      printEdge(node, n, m) //V
+      val (_, s) = mt(n, -gamma + 1, depth - 1)
+      if (-s >= gamma) {
+        printCutEdge(node) //V
+        // record the killer move
+        recordKillerMove(depth - 1, m)
+        // record transpositon table
+        recordNode(node, depth, -s, TranspositionTable.BETA, m)
+        return (m, gamma)
+      }
+      if (-s > g) {
+        bestMove = m
+        g = -s
+      }
+    }
+    printNode(node, g) //V
+    if (g < gamma)
+      recordNode(node, depth, g, TranspositionTable.ALPHA, bestMove)
+    (bestMove, g)
   }
 
   def score(node: N): Int
