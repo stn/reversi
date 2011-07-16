@@ -94,7 +94,7 @@ object Game {
       return
     }
 
-    if (args.length < 2) {
+    if (args.length < 1) {
       println("Please specify players")
       sys.exit(1)
     }
@@ -124,28 +124,38 @@ object Game {
   def play(player1: Player[ReversiNode], player2: Player[ReversiNode]): Marker = {
     var node = ReversiNode.Start
     var move: Move = Move.empty
+    var ply = 1
+
     player1.init(Dark)
     player2.init(Light)
 
-    var ply = 1
+    println(ply)
+    println(node.toString)
+
     while (true) {
       // player1
       move = player1.play(ply, node, move)
+      printf("D - %s\n\n", move)
       ply += 1
       node.play(move) match {
         case Some(d) => node = d
         case None => return Light // illegal move of Dark
       }
+      println(ply)
+      println(node.toString)
       if (node.isTerminal) {
         return node.winner
       }
       // player2
       move = player2.play(ply, node, move)
+      printf("L - %s\n\n", move)
       ply += 1
       node.play(move) match {
         case Some(d) => node = d
         case None => return Dark // illegal move of Light
       }
+      println(ply)
+      println(node.toString)
       if (node.isTerminal) {
         return node.winner
       }
