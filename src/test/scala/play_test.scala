@@ -1069,10 +1069,10 @@ class PlaySpec extends Spec with ShouldMatchers {
 
   }
 
-  describe("IterativeDeepeningTKPlayer") {
+  describe("NegaAlphaBetaTKIPlayer") {
 
     it("should return Move.empty for a leaf node.") {
-      val player = new IterativeDeepeningTKPlayer[UniformNode](2, 2) with UniformScore
+      val player = new NegaAlphaBetaTKIPlayer[UniformNode](2, 2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("1", Dark, 3)
       val m0 = player.play(0, b0, Move.empty)
@@ -1081,7 +1081,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return the max value of 1-depth tree.") {
-      val player = new IterativeDeepeningTKPlayer[UniformNode](1, 2) with UniformScore
+      val player = new NegaAlphaBetaTKIPlayer[UniformNode](1, 2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314", Dark, 3)
       val m0 = player.play(0, b0, Move.empty)
@@ -1091,7 +1091,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value.") {
-      val player = new IterativeDeepeningTKPlayer[UniformNode](2, 2) with UniformScore
+      val player = new NegaAlphaBetaTKIPlayer[UniformNode](2, 2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("324159870", Dark, 3)
       val m0 = player.play(0, b0, Move.empty)
@@ -1104,7 +1104,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value for 3-depth tree.") {
-      val player = new IterativeDeepeningTKPlayer[UniformNode](3, 2) with UniformScore
+      val player = new NegaAlphaBetaTKIPlayer[UniformNode](3, 2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("12345678", Dark, 2)
       val m0 = player.play(0, b0, Move.empty)
@@ -1118,7 +1118,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return a min max value for 4-depth tree.") {
-      val player = new IterativeDeepeningTKPlayer[UniformNode](4, 2) with UniformScore
+      val player = new NegaAlphaBetaTKIPlayer[UniformNode](4, 2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("1234567898765432", Dark, 2)
       val m0 = player.play(0, b0, Move.empty)
@@ -1140,7 +1140,7 @@ class PlaySpec extends Spec with ShouldMatchers {
     }
 
     it("should return 2 for pi-game.") {
-      val player = new IterativeDeepeningTKPlayer[UniformNode](4, 2) with UniformScore
+      val player = new NegaAlphaBetaTKIPlayer[UniformNode](4, 2) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
       val m0 = player.play(0, b0, Move.empty)

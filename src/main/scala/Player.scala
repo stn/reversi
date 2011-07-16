@@ -952,11 +952,11 @@ abstract class TranspositionTableWithKillerKeepPlayer[N <: Node[N]](
 
 }
 
-
-abstract class IterativeDeepeningTKPlayer[N <: Node[N]](
+// NegaAlphaBeta + Transposition table + Killer heuristic + Iterative Deepening
+abstract class NegaAlphaBetaTKIPlayer[N <: Node[N]](
   override val maxDepth: Int,
   override val numKillerMoves: Int
-) extends TranspositionTableWithKillerKeepPlayer[N](maxDepth, numKillerMoves) {
+) extends TranspositionTableWithKillerPlayer[N](maxDepth, numKillerMoves) {
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initKillerMoves(maxDepth)
@@ -965,7 +965,7 @@ abstract class IterativeDeepeningTKPlayer[N <: Node[N]](
     var m = Move.empty
     var s = 0
     for (d <- 1 to maxDepth) {
-      var ret = play(node, Int.MinValue + 1, Int.MaxValue, maxDepth)
+      var ret = play(node, Int.MinValue + 1, Int.MaxValue, d)
       m = ret._1
       s = ret._2
       Log.d("IterativeDeepening", "depth = " + d + ", m = " + m + ", s = " + s)
@@ -1365,7 +1365,7 @@ abstract class NegaScoutKTPlayer[N <: Node[N]](val maxDepth: Int, override val n
 }
 
 
-abstract class MTDfPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: Int) extends Player[N] with KillerHeuristic[N] with TranspositionTable[N] with VisualizeTree[N] {
+abstract class MTDfPlayer[N <: Node[N]](val maxDepth: Int, override val numKillerMoves: Int) extends Player[N] with KillerHeuristic[N] with TranspositionTable[N] with VisualizeTree[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initKillerMoves(maxDepth) //K
@@ -1446,6 +1446,61 @@ abstract class MTDfPlayer[N <: Node[N]](val maxDepth: Int, val numKillerMoves: I
   }
 
   def score(node: N): Int
+
+}
+
+
+// MTDf + Iterative Deepening
+abstract class MTDfIPlayer[N <: Node[N]](override val maxDepth: Int, override val numKillerMoves: Int) extends MTDfPlayer[N](maxDepth, numKillerMoves) {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    initKillerMoves(maxDepth) //K
+    initTranspositionTable() //T
+    printHeader() //V
+    var m = Move.empty
+    var f = 0
+    for (d <- 1 to maxDepth) {
+      var ret = mtd(node, f, d)
+      m = ret._1
+      f = ret._2
+      Log.d("IterativeDeepening", "depth = " + d + ", m = " + m + ", s = " + f)
+    }
+    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(",")) //K
+    Log.d("TranspositionTable", transpositionTable.size.toString) //T
+    printFooter() //V
+    m
+  }
+
+}
+
+abstract class MTDfI2Player[N <: Node[N]](override val maxDepth: Int, override val numKillerMoves: Int) extends MTDfPlayer[N](maxDepth, numKillerMoves) {
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    initKillerMoves(maxDepth) //K
+    initTranspositionTable() //T
+    printHeader() //V
+    var m = Move.empty
+    var f = 0
+    if (maxDepth % 2 == 0) {
+      for (d <- 2 to maxDepth by 2) {
+        var ret = mtd(node, f, d)
+        m = ret._1
+        f = ret._2
+        Log.d("IterativeDeepening", "depth = " + d + ", m = " + m + ", s = " + f)
+      }
+    } else {
+      for (d <- 1 to maxDepth by 2) {
+        var ret = mtd(node, f, d)
+        m = ret._1
+        f = ret._2
+        Log.d("IterativeDeepening", "depth = " + d + ", m = " + m + ", s = " + f)
+      }
+    }
+    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(",")) //K
+    Log.d("TranspositionTable", transpositionTable.size.toString) //T
+    printFooter() //V
+    m
+  }
 
 }
 

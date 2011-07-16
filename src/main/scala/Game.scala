@@ -107,11 +107,15 @@ object Game {
       case "transposition_h9" => new TranspositionTableWithHistoryPlayer[ReversiNode](9) with MarkersScore
       case "transposition_h10" => new TranspositionTableWithHistoryPlayer[ReversiNode](10) with MarkersScore
 
-      case "iterative_deepening_tk6" => new IterativeDeepeningTKPlayer[ReversiNode](6, 32) with MarkersScore
-      case "iterative_deepening_tk7" => new IterativeDeepeningTKPlayer[ReversiNode](7, 32) with MarkersScore
-      case "iterative_deepening_tk8" => new IterativeDeepeningTKPlayer[ReversiNode](8, 32) with MarkersScore
-      case "iterative_deepening_tk9" => new IterativeDeepeningTKPlayer[ReversiNode](9, 32) with MarkersScore
-      case "iterative_deepening_tk10" => new IterativeDeepeningTKPlayer[ReversiNode](10, 32) with MarkersScore
+      case "negaalpha_tki2" => new NegaAlphaBetaTKIPlayer[ReversiNode](2, 32) with MarkersScore
+      case "negaalpha_tki3" => new NegaAlphaBetaTKIPlayer[ReversiNode](3, 32) with MarkersScore
+      case "negaalpha_tki4" => new NegaAlphaBetaTKIPlayer[ReversiNode](4, 32) with MarkersScore
+      case "negaalpha_tki5" => new NegaAlphaBetaTKIPlayer[ReversiNode](5, 32) with MarkersScore
+      case "negaalpha_tki6" => new NegaAlphaBetaTKIPlayer[ReversiNode](6, 32) with MarkersScore
+      case "negaalpha_tki7" => new NegaAlphaBetaTKIPlayer[ReversiNode](7, 32) with MarkersScore
+      case "negaalpha_tki8" => new NegaAlphaBetaTKIPlayer[ReversiNode](8, 32) with MarkersScore
+      case "negaalpha_tki9" => new NegaAlphaBetaTKIPlayer[ReversiNode](9, 32) with MarkersScore
+      case "negaalpha_tki10" => new NegaAlphaBetaTKIPlayer[ReversiNode](10, 32) with MarkersScore
 
       case "scout2" => new ScoutPlayer[ReversiNode](2) with MarkersScore
       case "scout3" => new ScoutPlayer[ReversiNode](3) with MarkersScore
@@ -172,6 +176,26 @@ object Game {
       case "mtdf8" => new MTDfPlayer[ReversiNode](8, 32) with MarkersScore
       case "mtdf9" => new MTDfPlayer[ReversiNode](9, 32) with MarkersScore
       case "mtdf10" => new MTDfPlayer[ReversiNode](10, 32) with MarkersScore
+
+      case "mtdfi2" => new MTDfIPlayer[ReversiNode](2, 32) with MarkersScore
+      case "mtdfi3" => new MTDfIPlayer[ReversiNode](3, 32) with MarkersScore
+      case "mtdfi4" => new MTDfIPlayer[ReversiNode](4, 32) with MarkersScore
+      case "mtdfi5" => new MTDfIPlayer[ReversiNode](5, 32) with MarkersScore
+      case "mtdfi6" => new MTDfIPlayer[ReversiNode](6, 32) with MarkersScore
+      case "mtdfi7" => new MTDfIPlayer[ReversiNode](7, 32) with MarkersScore
+      case "mtdfi8" => new MTDfIPlayer[ReversiNode](8, 32) with MarkersScore
+      case "mtdfi9" => new MTDfIPlayer[ReversiNode](9, 32) with MarkersScore
+      case "mtdfi10" => new MTDfIPlayer[ReversiNode](10, 32) with MarkersScore
+
+      case "mtdfii2" => new MTDfI2Player[ReversiNode](2, 32) with MarkersScore
+      case "mtdfii3" => new MTDfI2Player[ReversiNode](3, 32) with MarkersScore
+      case "mtdfii4" => new MTDfI2Player[ReversiNode](4, 32) with MarkersScore
+      case "mtdfii5" => new MTDfI2Player[ReversiNode](5, 32) with MarkersScore
+      case "mtdfii6" => new MTDfI2Player[ReversiNode](6, 32) with MarkersScore
+      case "mtdfii7" => new MTDfI2Player[ReversiNode](7, 32) with MarkersScore
+      case "mtdfii8" => new MTDfI2Player[ReversiNode](8, 32) with MarkersScore
+      case "mtdfii9" => new MTDfI2Player[ReversiNode](9, 32) with MarkersScore
+      case "mtdfii10" => new MTDfI2Player[ReversiNode](10, 32) with MarkersScore
 
       //case "transposition_keep6" => new TranspositionTableKeepPlayer[ReversiNode](6) with MarkersScore
       //case "transposition_k_keep6" => new TranspositionTableWithKillerKeepPlayer[ReversiNode](6, 32) with MarkersScore
