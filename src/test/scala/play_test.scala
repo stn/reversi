@@ -1096,11 +1096,6 @@ class PlaySpec extends Spec with ShouldMatchers {
       val b0 = new UniformNode("324159870", Dark, 3)
       val m0 = player.play(0, b0, Move.empty)
       m0 should be (PosMove(0))
-      player.transpositionTable.toList should be (List(
-          (BigInt(324159870), (2, 2, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(159), (1, -2, TranspositionTable.BETA, PosMove(0))),
-          (BigInt(324), (1, -2, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(870), (1, -2, TranspositionTable.BETA, PosMove(2)))))
     }
 
     it("should return a min max value for 3-depth tree.") {
@@ -1109,12 +1104,6 @@ class PlaySpec extends Spec with ShouldMatchers {
       val b0 = new UniformNode("12345678", Dark, 2)
       val m0 = player.play(0, b0, Move.empty)
       m0 should be (PosMove(0))
-      player.transpositionTable.toList should be (List(
-          (BigInt(12), (1, -1, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(1234), (2, 3, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
     }
 
     it("should return a min max value for 4-depth tree.") {
@@ -1123,20 +1112,6 @@ class PlaySpec extends Spec with ShouldMatchers {
       val b0 = new UniformNode("1234567898765432", Dark, 2)
       val m0 = player.play(0, b0, Move.empty)
       m0 should be (PosMove(1))
-      player.transpositionTable.toList should be (List(
-          (BigInt(12), (1, -1, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(54), (1, -4, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(1234), (2, 3, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(98765432), (3, -4, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt("1234567898765432"), (4, 4, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(34), (1, -3, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(9876), (2, 8, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(5432), (2, 4, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(32), (1, -4, TranspositionTable.BETA, PosMove(0))),
-          (BigInt(98), (1, -8, TranspositionTable.EXACT, PosMove(1))),
-          (BigInt(76), (1, -8, TranspositionTable.BETA, PosMove(0))),
-          (BigInt(12345678), (3, -3, TranspositionTable.EXACT, PosMove(0))),
-          (BigInt(5678), (2, 3, TranspositionTable.BETA, PosMove(0)))))
     }
 
     it("should return 2 for pi-game.") {

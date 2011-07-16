@@ -20,4 +20,13 @@ class BoardGameSpec extends Spec with ShouldMatchers {
     }
   }
 
+  describe("Move") {
+    it("should be converted from a string") {
+      Move("Pass") should be (Pass)
+      Move("a1") should be (PutMarker(0, 0))
+      Move("b1") should be (PutMarker(1, 0))
+      Move("a3") should be (PutMarker(0, 2))
+    }
+  }
+
 }

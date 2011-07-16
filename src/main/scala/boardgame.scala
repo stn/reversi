@@ -11,6 +11,16 @@ class Move()
 
 object Move {
   val empty: Move = new Move
+
+  def apply(x: String): Move = {
+    if (x == "Pass") return Pass
+    if (x.length == 2) {
+      val mx = x(0) - 'a'
+      val my = x(1) - '1'
+      return PutMarker(mx, my)
+    }
+    Move.empty
+  }
 }
 
 case object Pass extends Move
