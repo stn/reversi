@@ -12,14 +12,17 @@ class Move()
 object Move {
   val empty: Move = new Move
 
-  def apply(x: String): Move = {
-    if (x == "Pass") return Pass
-    if (x.length == 2) {
-      val mx = x(0) - 'a'
-      val my = x(1) - '1'
-      return PutMarker(mx, my)
+  def apply(s: String): Move = {
+    val p = """([a-h])([1-8])""".r
+    s match {
+      case "Pass" => Pass
+      case p(x,y) => {
+        val mx = x(0) - 'a'
+        val my = y(0) - '1'
+        PutMarker(mx, my)
+      }
+      case _ => Move.empty
     }
-    Move.empty
   }
 }
 

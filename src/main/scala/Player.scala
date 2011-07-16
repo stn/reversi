@@ -2,11 +2,29 @@ package boardgame
 
 import scala.collection._
 import scala.compat.Platform
+import scala.io._
 import scala.util.control.Breaks._
 import scala.util.Random
 
 import boardgame.Marker._
 
+
+class HumanPlayer[N <: Node[N]] extends Player[N] {
+  override def play(ply: Int, node: N, last: Move): Move = {
+    val moves = node.possibleMoves()
+    if (moves.length > 0) {
+      var m = Move.empty
+      while (m == Move.empty) {
+        println(moves.mkString(" "))
+        m = Move(readLine("> "))
+      }
+      return m
+    } else {
+      readLine("> Pass")
+      Pass
+    }
+  }
+}
 
 class RandomPlayer[N <: Node[N]] extends Player[N] {
   override def play(ply: Int, node: N, last: Move): Move = {

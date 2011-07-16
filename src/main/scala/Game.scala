@@ -15,6 +15,8 @@ object Game {
     val name = s.head
     val args = s.tail map { _.toInt }
     (name: @unchecked) match {
+      case "human" =>
+          new HumanPlayer[ReversiNode]
       case "random" =>
           new RandomPlayer[ReversiNode]
       case "greedy" =>
@@ -129,11 +131,10 @@ object Game {
     player1.init(Dark)
     player2.init(Light)
 
-    println(ply)
-    println(node.toString)
-
     while (true) {
       // player1
+      println(ply)
+      println(node.toString)
       move = player1.play(ply, node, move)
       printf("D - %s\n\n", move)
       ply += 1
@@ -141,12 +142,13 @@ object Game {
         case Some(d) => node = d
         case None => return Light // illegal move of Dark
       }
-      println(ply)
-      println(node.toString)
       if (node.isTerminal) {
+        println(node.toString)
         return node.winner
       }
       // player2
+      println(ply)
+      println(node.toString)
       move = player2.play(ply, node, move)
       printf("L - %s\n\n", move)
       ply += 1
@@ -154,9 +156,8 @@ object Game {
         case Some(d) => node = d
         case None => return Dark // illegal move of Light
       }
-      println(ply)
-      println(node.toString)
       if (node.isTerminal) {
+        println(node.toString)
         return node.winner
       }
     }
