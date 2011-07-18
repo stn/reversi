@@ -78,8 +78,11 @@ object Game {
       case "mtdfi" =>
           new MTDfIPlayer[ReversiNode](args(0), args(1))
               with MarkersScore
-      case "mtdfii" =>
+      case "mtdfi2" =>
           new MTDfI2Player[ReversiNode](args(0), args(1))
+              with MarkersScore
+      case "mtdfit" =>
+          new MTDfITPlayer[ReversiNode](args(0), args(1), args(2))
               with MarkersScore
       }
     }

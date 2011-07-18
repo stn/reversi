@@ -1,5 +1,7 @@
 package boardgame
 
+import scala.actors._
+import scala.actors.Actor._
 import scala.collection._
 import scala.compat.Platform
 import scala.io._
@@ -1383,7 +1385,13 @@ abstract class NegaScoutKTPlayer[N <: Node[N]](val maxDepth: Int, override val n
 }
 
 
-abstract class MTDfPlayer[N <: Node[N]](val maxDepth: Int, override val numKillerMoves: Int) extends Player[N] with KillerHeuristic[N] with TranspositionTable[N] with VisualizeTree[N] {
+abstract class MTDfPlayer[N <: Node[N]](
+    val maxDepth: Int,
+    override val numKillerMoves: Int
+) extends Player[N]
+      with KillerHeuristic[N]
+      with TranspositionTable[N]
+      with VisualizeTree[N] {
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initKillerMoves(maxDepth) //K
@@ -1469,7 +1477,10 @@ abstract class MTDfPlayer[N <: Node[N]](val maxDepth: Int, override val numKille
 
 
 // MTDf + Iterative Deepening
-abstract class MTDfIPlayer[N <: Node[N]](override val maxDepth: Int, override val numKillerMoves: Int) extends MTDfPlayer[N](maxDepth, numKillerMoves) {
+abstract class MTDfIPlayer[N <: Node[N]](
+    override val maxDepth: Int,
+    override val numKillerMoves: Int
+) extends MTDfPlayer[N](maxDepth, numKillerMoves) {
 
   override def play(ply: Int, node: N, last: Move): Move = {
     initKillerMoves(maxDepth) //K
@@ -1522,3 +1533,54 @@ abstract class MTDfI2Player[N <: Node[N]](override val maxDepth: Int, override v
 
 }
 
+// MTD(f) + Iterative Deepening (i+=2) + Time
+abstract class MTDfITPlayer[N <: Node[N]](
+    val maxTime: Int,
+    override val maxDepth: Int,
+    override val numKillerMoves: Int
+) extends MTDfPlayer[N](maxDepth, numKillerMoves) {
+
+  var limitTime: Long = _
+
+  override def play(ply: Int, node: N, last: Move): Move = {
+    limitTime = Platform.currentTime + maxTime
+    initKillerMoves(maxDepth) //K
+    initTranspositionTable() //T
+    var bestMove = Move.empty
+    var f = 0
+    try {
+      if (maxDepth % 2 == 0) {
+        for (d <- 2 to maxDepth by 2) {
+          var ret = mtd(node, f, d)
+          bestMove = ret._1
+          f = ret._2
+          Log.d("IterativeDeepening",
+                "depth = " + d + ", m = " + bestMove + ", s = " + f)
+        }
+      } else {
+        for (d <- 1 to maxDepth by 2) {
+          var ret = mtd(node, f, d)
+          bestMove = ret._1
+          f = ret._2
+          Log.d("IterativeDeepening",
+                "depth = " + d + ", m = " + bestMove + ", s = " + f)
+        }
+      }
+    } catch {
+      case e: TimeOutException => //
+    }
+    Log.d("killer_moves", numKillerMoves.toString + "," + (killerMoves map { _.length }).mkString(",")) //K
+    Log.d("TranspositionTable", transpositionTable.size.toString) //T
+    bestMove
+  }
+
+  override def mt(node: N, gamma: Int, depth: Int): (Move, Int) = {
+    if (Platform.currentTime < limitTime)
+      super.mt(node, gamma, depth)
+    else
+      throw new TimeOutException()
+  }
+
+  private class TimeOutException extends Exception
+
+}

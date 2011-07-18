@@ -1886,7 +1886,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       val b0 = new UniformNode("0123456789876543", Dark, 2)
       player.startBenchmark()
       val (m0, s0) = player.mtd(b0, 0, 4)
-      //m0 should be (PosMove(1))
+      //m0 should be (PosMove(1)) //?
       s0 should be (5)
       player.tnodeCount should be (26) // right?
       player.inodeCount should be (58)
@@ -1915,6 +1915,98 @@ class PlaySpec extends Spec with ShouldMatchers {
       s0 should be (-4)
       player.tnodeCount should be (10)
       player.inodeCount should be (22)
+    }
+
+  }
+
+  describe("MTDfIPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new MTDfIPlayer[UniformNode](2, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      player.play(30, b0, Move.empty) should be (Move.empty)
+    }
+
+    it("should return the max value of 1-depth tree.") {
+      val player = new MTDfIPlayer[UniformNode](1, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314", Dark, 3)
+      player.play(30, b0, Move.empty) should be (PosMove(1))
+    }
+
+    it("should return a min max value.") {
+      val player = new MTDfIPlayer[UniformNode](2, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("324159870", Dark, 3)
+      player.play(30, b0, Move.empty) should be (PosMove(1)) //?
+    }
+
+    it("should return a min max value for 3-depth tree.") {
+      val player = new MTDfIPlayer[UniformNode](3, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("01234567", Dark, 2)
+      player.play(30, b0, Move.empty) should be (PosMove(0))
+    }
+
+    it("should return a min max value for 3-depth tree (reverse).") {
+      val player = new MTDfIPlayer[UniformNode](3, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("76543210", Dark, 2)
+      player.play(30, b0, Move.empty) should be (PosMove(1))
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new MTDfIPlayer[UniformNode](4, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("0123456789876543", Dark, 2)
+      player.play(30, b0, Move.empty) should be (PosMove(0)) //?
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new MTDfIPlayer[UniformNode](4, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      player.play(30, b0, Move.empty) should be (PosMove(2)) //?
+    }
+
+    it("should return 2 for minimal negascout tree.") {
+      val player = new MTDfIPlayer[UniformNode](3, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("45392955", Dark, 2)
+      player.play(30, b0, Move.empty) should be (PosMove(0)) //?
+    }
+
+  }
+
+  describe("MTDfITPlayer") {
+
+    it("should return Move.empty for a leaf node.") {
+      val player = new MTDfITPlayer[UniformNode](1000, 2, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("1", Dark, 3)
+      player.play(30, b0, Move.empty) should be (Move.empty)
+    }
+
+    it("should return a min max value.") {
+      val player = new MTDfITPlayer[UniformNode](1000, 2, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("324159870", Dark, 3)
+      player.play(30, b0, Move.empty) should be (PosMove(0))
+    }
+
+    it("should return a min max value for 4-depth tree.") {
+      val player = new MTDfITPlayer[UniformNode](1000, 4, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("0123456789876543", Dark, 2)
+      player.play(30, b0, Move.empty) should be (PosMove(1))
+    }
+
+    it("should return 2 for pi-game.") {
+      val player = new MTDfITPlayer[UniformNode](1000, 4, 32) with UniformScore
+      player.init(Dark)
+      val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
+      player.play(30, b0, Move.empty) should be (PosMove(0)) //?
     }
 
   }
