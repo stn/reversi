@@ -1832,7 +1832,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       val (m0, s0) = player.mtd(b0, 0, 1)
       m0 should be (PosMove(1))
       s0 should be (-1)
-      player.tnodeCount should be (4)
+      player.tnodeCount should be (5)
       player.inodeCount should be (2)
     }
 
@@ -1847,7 +1847,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       m0 should be (PosMove(0))
       s0 should be (2)
       player.tnodeCount should be (9)
-      player.inodeCount should be (7)
+      player.inodeCount should be (6)
     }
 
     it("should return a min max value for 3-depth tree.") {
@@ -1860,8 +1860,8 @@ class PlaySpec extends Spec with ShouldMatchers {
       val (m0, s0) = player.mtd(b0, 0, 3)
       m0 should be (PosMove(0))
       s0 should be (-2)
-      player.tnodeCount should be (6)
-      player.inodeCount should be (13) // right?
+      player.tnodeCount should be (7)
+      player.inodeCount should be (10) // right?
     }
 
     it("should return a min max value for 3-depth tree (reverse).") {
@@ -1875,7 +1875,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       m0 should be (PosMove(1))
       s0 should be (-2)
       player.tnodeCount should be (6)
-      player.inodeCount should be (13) // right?
+      player.inodeCount should be (9) // right?
     }
 
     it("should return a min max value for 4-depth tree.") {
@@ -1886,10 +1886,10 @@ class PlaySpec extends Spec with ShouldMatchers {
       val b0 = new UniformNode("0123456789876543", Dark, 2)
       player.startBenchmark()
       val (m0, s0) = player.mtd(b0, 0, 4)
-      //m0 should be (PosMove(1)) //?
+      m0 should be (PosMove(1)) //?
       s0 should be (5)
-      player.tnodeCount should be (26) // right?
-      player.inodeCount should be (58)
+      player.tnodeCount should be (19) // right?
+      player.inodeCount should be (32)
     }
 
     it("should return 2 for pi-game.") {
@@ -1913,8 +1913,8 @@ class PlaySpec extends Spec with ShouldMatchers {
       val (m0, s0) = player.mtd(b0, 0, 3)
       m0 should be (PosMove(0))
       s0 should be (-4)
-      player.tnodeCount should be (10)
-      player.inodeCount should be (22)
+      player.tnodeCount should be (14)
+      player.inodeCount should be (18)
     }
 
   }
@@ -1939,7 +1939,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       val player = new MTDfIPlayer[UniformNode](2, 32) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("324159870", Dark, 3)
-      player.play(30, b0, Move.empty) should be (PosMove(1)) //?
+      player.play(30, b0, Move.empty) should be (PosMove(0)) //?
     }
 
     it("should return a min max value for 3-depth tree.") {
@@ -1960,14 +1960,14 @@ class PlaySpec extends Spec with ShouldMatchers {
       val player = new MTDfIPlayer[UniformNode](4, 32) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("0123456789876543", Dark, 2)
-      player.play(30, b0, Move.empty) should be (PosMove(0)) //?
+      player.play(30, b0, Move.empty) should be (PosMove(1)) //?
     }
 
     it("should return 2 for pi-game.") {
       val player = new MTDfIPlayer[UniformNode](4, 32) with UniformScore
       player.init(Dark)
       val b0 = new UniformNode("314159265358979323846264338327950288419716939937510582097494459230781640628620899", Dark, 3)
-      player.play(30, b0, Move.empty) should be (PosMove(2)) //?
+      player.play(30, b0, Move.empty) should be (PosMove(0)) //?
     }
 
     it("should return 2 for minimal negascout tree.") {
