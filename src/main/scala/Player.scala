@@ -1411,7 +1411,7 @@ abstract class MTDfPlayer[N <: Node[N]](
     var lower = Int.MinValue + 1
     while (lower < upper) {
       val bound = if (g == lower) g + 1 else g
-      val (m, s) = mt(node, bound - 1, bound, depth)
+      val (m, s) = mt(node, bound, depth)
       g = s
       bestMove = m
       if (g < bound) {
@@ -1423,7 +1423,7 @@ abstract class MTDfPlayer[N <: Node[N]](
     return (bestMove, g)
   }
 
-  def mt(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  def mt(node: N, gamma: Int, depth: Int): (Move, Int) = {
     if (depth == 0 || node.isTerminal) {
       countTNode() //C
       printNode(node, score(node)) //V
@@ -1432,7 +1432,7 @@ abstract class MTDfPlayer[N <: Node[N]](
     countINode() //C
 
     // check transposition table
-    val (recordedMove, recordedScore) = probeNode(node, depth, alpha, beta)
+    val (recordedMove, recordedScore) = probeNode(node, depth, gamma - 1, gamma)
     
     var moves = node.possibleMoves().toList
 
@@ -1449,8 +1449,8 @@ abstract class MTDfPlayer[N <: Node[N]](
     for (m <- moves) {
       val n = node.play(m).get
       printEdge(node, n, m) //V
-      val (_, s) = mt(n, -beta, -alpha, depth - 1)
-      if (-s >= beta) {
+      val (_, s) = mt(n, -gamma + 1, depth - 1)
+      if (-s >= gamma) {
         printCutEdge(node) //V
         // record the killer move
         recordKillerMove(depth - 1, m)
@@ -1464,7 +1464,7 @@ abstract class MTDfPlayer[N <: Node[N]](
       }
     }
     printNode(node, g) //V
-    if (g < alpha)
+    if (g < gamma)
       recordNode(node, depth, g, TranspositionTable.ALPHA, bestMove)
     (bestMove, g)
   }
@@ -1572,9 +1572,9 @@ abstract class MTDfITPlayer[N <: Node[N]](
     bestMove
   }
 
-  override def mt(node: N, alpha: Int, beta: Int, depth: Int): (Move, Int) = {
+  override def mt(node: N, gamma: Int, depth: Int): (Move, Int) = {
     if (Platform.currentTime < limitTime)
-      super.mt(node, alpha, beta, depth)
+      super.mt(node, gamma, depth)
     else
       throw new TimeOutException()
   }

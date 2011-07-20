@@ -1832,7 +1832,7 @@ class PlaySpec extends Spec with ShouldMatchers {
       val (m0, s0) = player.mtd(b0, 0, 1)
       m0 should be (PosMove(1))
       s0 should be (-1)
-      player.tnodeCount should be (5)
+      player.tnodeCount should be (4)
       player.inodeCount should be (2)
     }
 
